@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineBook</title>
+    <script>
+      const base = "/Movie-Booking/";
+      const path = window.location.pathname + window.location.search + window.location.hash;
+      const encoded = encodeURIComponent(path.startsWith(base) ? path.slice(base.length) : path);
+      window.location.replace(`${base}?redirect=${encoded}`);
+    </script>
+  </head>
+  <body>Loading CineBook…</body>
+</html>
