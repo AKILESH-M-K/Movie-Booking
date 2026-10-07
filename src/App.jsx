@@ -269,7 +269,7 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/Movie-Booking">
       <AppRoutes />
     </BrowserRouter>
   );

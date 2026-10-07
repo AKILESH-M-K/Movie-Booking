@@ -1,22 +1,50 @@
 import axios from "axios";
+import movies from "../data/movies";
+import { theatres } from "../data/bookingData";
 
-const BASE_URL = "http://localhost:4000";
-const api = axios.create({ baseURL: BASE_URL, timeout: 8000 });
+// The local JSON server is useful for the classroom/demo environment.
+// GitHub Pages cannot run a localhost API, so production uses the bundled data.
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:4000";
+const useRemoteApi = import.meta.env.DEV || Boolean(import.meta.env.VITE_API_URL);
+const api = axios.create({ baseURL: API_URL, timeout: 5000 });
 
-// Experiment 1: Fetch API demonstration.
-export async function fetchMovies() {
-  const response = await fetch(`${BASE_URL}/movies`);
-  if (!response.ok) throw new Error("Failed to fetch movies");
-  return response.json();
+async function tryRemote(request, fallback) {
+  if (!useRemoteApi) return fallback;
+  try {
+    return await request();
+  } catch {
+    return fallback;
+  }
 }
 
-// Experiment 1: Axios demonstration for dynamic REST API data.
+export async function fetchMovies() {
+  return tryRemote(
+    async () => {
+      const response = await fetch(`${API_URL}/movies`);
+      if (!response.ok) throw new Error("Failed to fetch movies");
+      return response.json();
+    },
+    movies,
+  );
+}
+
 export async function fetchMovieById(id) {
-  const response = await api.get(`/movies/${id}`);
-  return response.data;
+  const fallback = movies.find((movie) => String(movie.id) === String(id));
+  return tryRemote(
+    async () => {
+      const response = await api.get(`/movies/${encodeURIComponent(id)}`);
+      return response.data;
+    },
+    fallback,
+  );
 }
 
 export async function fetchTheatres() {
-  const response = await api.get("/theatres");
-  return response.data;
+  return tryRemote(
+    async () => {
+      const response = await api.get("/theatres");
+      return response.data;
+    },
+    theatres,
+  );
 }

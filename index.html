@@ -2,11 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>movie-booking</title>
+    <meta name="theme-color" content="#a4652a" />
+    <meta name="description" content="CineBook movie ticket booking application" />
+    <link rel="icon" href="/Movie-Booking/favicon.ico" />
+    <link rel="apple-touch-icon" href="/Movie-Booking/apple-touch-icon.png" />
+    <link rel="manifest" href="/Movie-Booking/site.webmanifest" />
+    <title>CineBook - Movie Booking</title>
   </head>
   <body>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect");
+      if (redirect) {
+        const target = decodeURIComponent(redirect);
+        const cleanTarget = target.startsWith("/Movie-Booking/")
+          ? target
+          : `/Movie-Booking/${target.replace(/^\/+/, "")}`;
+        window.history.replaceState({}, "", cleanTarget);
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
