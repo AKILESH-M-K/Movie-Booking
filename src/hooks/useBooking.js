@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   clearBooking,
@@ -18,6 +19,10 @@ export const CONVENIENCE_FEE_PER_SEAT = 25;
 export default function useBooking() {
   const dispatch = useDispatch();
   const booking = useSelector((state) => state.booking);
+
+  // Stable callbacks: components can list these in effect dependencies without
+  // re-triggering the effect on every render.
+  const prefill = useCallback((profile) => dispatch(prefillCustomer(profile)), [dispatch]);
 
   const selectedSeatObjects = seats.filter((seat) => booking.selectedSeats.includes(seat.id));
   const selectedSeatCount = selectedSeatObjects.length;
@@ -42,7 +47,7 @@ export default function useBooking() {
     selectShow: (show) => dispatch(selectShow(show)),
     selectSeat: (seatId) => dispatch(selectSeat(seatId)),
     removeSeat: (seatId) => dispatch(removeSeat(seatId)),
-    prefillCustomer: (profile) => dispatch(prefillCustomer(profile)),
+    prefillCustomer: prefill,
     updateCustomer: (field, value) => {
       const safeValue =
         field === "name"

@@ -21,11 +21,18 @@ function BookingSummary({ onContinue, onBack }) {
   const [errors, setErrors] = useState({});
   const ids = { name: useId(), email: useId(), phone: useId() };
 
-  // Pre-fill contact details from the signed-in profile so the user does not
-  // retype information they already gave us. Only blank fields are filled.
+  // Pre-fill contact details from the signed-in profile once per visit so the
+  // user does not retype information they already gave us. Only blank fields
+  // are filled, and the effect is keyed on the email so it cannot re-dispatch
+  // on every render (which previously caused an infinite update loop).
+  const profileEmail = user?.email;
+  const profileName = user?.name;
+  const profilePhone = user?.phone;
   useEffect(() => {
-    if (user) prefillCustomer({ name: user.name, email: user.email, phone: user.phone });
-  }, [user, prefillCustomer]);
+    if (!profileEmail) return;
+    prefillCustomer({ name: profileName, email: profileEmail, phone: profilePhone });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileEmail]);
 
   const hasRequiredDetails =
     Boolean(customer.name) && Boolean(customer.email) && Boolean(customer.phone);
