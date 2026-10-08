@@ -1,6 +1,6 @@
 {
   "id": "/Movie-Booking/",
-  "name": "CineBook - Movie Booking",
+  "name": "CineBook - Movie Ticket Booking",
   "short_name": "CineBook",
   "description": "Discover movies, choose theatres and seats, and book your tickets with CineBook.",
   "start_url": "/Movie-Booking/",
@@ -21,12 +21,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "/Movie-Booking/android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
     },
     {
       "src": "/Movie-Booking/android-chrome-512x512.png",

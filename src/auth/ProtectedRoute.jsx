@@ -1,7 +1,8 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import { safeReturnPath } from "../utils/navigation";
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
 
@@ -10,12 +11,12 @@ function ProtectedRoute({ children }) {
       <Navigate
         to="/login"
         replace
-        state={{ from: `${location.pathname}${location.search}` }}
+        state={{ from: safeReturnPath(`${location.pathname}${location.search}`) }}
       />
     );
   }
 
-  return children || <Outlet />;
+  return <Outlet />;
 }
 
 export default ProtectedRoute;

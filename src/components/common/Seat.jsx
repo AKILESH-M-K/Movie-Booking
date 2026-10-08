@@ -1,10 +1,15 @@
-function Seat({ seat, selected = false, onClick, disabled = false, booked = false }) {
+function Seat({ seat, selected = false, onClick, disabled = false, booked = false, price }) {
+  const stateLabel = booked ? "Booked" : selected ? "Selected" : "Available";
+  const label = `Seat ${seat.id}, ${seat.type}${price != null ? `, ₹${price}` : ""}, ${stateLabel}`;
+
   return (
     <button
       type="button"
       disabled={disabled}
-      onClick={() => onClick(seat.id)}
-      title={booked ? `${seat.id} - Already booked` : `${seat.id} - ${seat.type} seat`}
+      onClick={() => onClick(seat)}
+      aria-label={label}
+      aria-pressed={selected}
+      title={label}
       className={`flex h-11 w-11 items-center justify-center rounded-lg border text-xs font-black transition-all duration-200 sm:h-12 sm:w-12 ${
         booked
           ? "cursor-not-allowed border-[#514b41] bg-[#514b41] text-[#e4ded4] line-through"

@@ -28,9 +28,14 @@ function Profile() {
       return;
     }
 
-    updateProfile({ name: cleanName, phone: cleanPhone });
+    const result = updateProfile({ name: cleanName, phone: cleanPhone });
+    if (!result.success) {
+      setError(result.error);
+      setMessage("");
+      return;
+    }
     setError("");
-    setMessage("Profile updated successfully.");
+    setMessage("Profile updated. Your details will be used for future bookings.");
   };
 
   return (
@@ -58,7 +63,7 @@ function Profile() {
               label="Full Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              error={error === "Name is required" ? error : ""}
+              error={error === "Enter a valid name" ? error : ""}
               required
             />
             <Input
@@ -74,7 +79,7 @@ function Profile() {
               inputMode="numeric"
               value={phone}
               onChange={(e) => setPhone(sanitizePhone(e.target.value))}
-              error={error && error !== "Name is required" ? error : ""}
+              error={error === "Enter a valid 10-digit phone number" ? error : ""}
               placeholder="10-digit mobile number"
             />
 

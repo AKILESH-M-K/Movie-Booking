@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 
 function isStandalone() {
   return (
@@ -57,46 +56,40 @@ export default function InstallPWA() {
         {deferredPrompt ? "Install App" : "App / Install"}
       </button>
 
-      {showHelp &&
-        createPortal(
+      {showHelp && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-5"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pwa-help-title"
+          onClick={() => setShowHelp(false)}
+        >
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 sm:p-6"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="pwa-help-title"
-            onClick={() => setShowHelp(false)}
+            className="w-full max-w-md rounded-3xl border border-[#eae3cc] bg-[#fffef7] p-7 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
           >
-            <div
-              className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-3xl border border-[#eae3cc] bg-[#fffef7] p-5 sm:p-7 shadow-2xl"
-              onClick={(event) => event.stopPropagation()}
+            <h2 id="pwa-help-title" className="text-2xl font-black text-[#3d3324]">
+              Install CineBook
+            </h2>
+            <p className="mt-3 text-base leading-7 text-[#736956]">
+              This browser does not expose the automatic PWA installation prompt.
+              In Chrome or Edge, open the browser menu and choose <b>Install app</b>
+              or <b>Add to Home screen</b>.
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[#847960]">
+              Zen Browser is Firefox-based and may not provide an installable-PWA
+              button. The CineBook website itself still works normally in Zen.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowHelp(false)}
+              className="mt-6 w-full rounded-xl bg-[#a4652a] px-5 py-3.5 text-base font-black text-white hover:bg-[#875022]"
             >
-              <h2
-                id="pwa-help-title"
-                className="text-xl sm:text-2xl font-black text-[#3d3324]"
-              >
-                Install CineBook
-              </h2>
-              <p className="mt-3 text-sm sm:text-base leading-6 sm:leading-7 text-[#736956]">
-                This browser does not expose the automatic PWA installation
-                prompt. In Chrome or Edge, open the browser menu and choose{" "}
-                <b>Install app</b> or <b>Add to Home screen</b>.
-              </p>
-              <p className="mt-3 text-xs sm:text-sm leading-5 sm:leading-6 text-[#847960]">
-                Zen Browser is Firefox-based and may not provide an
-                installable-PWA button. The CineBook website itself still works
-                normally in Zen.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowHelp(false)}
-                className="mt-6 w-full rounded-xl bg-[#a4652a] px-5 py-3.5 text-sm sm:text-base font-black text-white transition-colors hover:bg-[#875022]"
-              >
-                Close
-              </button>
-            </div>
-          </div>,
-          document.body
-        )}
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

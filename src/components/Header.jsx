@@ -65,9 +65,11 @@ function Header() {
               <button
                 type="button"
                 onClick={() => {
+                  // Clear the in-progress booking and the session together so
+                  // nothing from the previous user remains visible.
                   clearBooking();
                   logout();
-                  navigate("/login", { replace: true });
+                  navigate("/", { replace: true });
                 }}
                 className="rounded-xl border border-[#dbcfb4] bg-[#fcf7eb] px-4 py-2.5 text-sm font-black text-[#5e5039] transition-all hover:-translate-y-0.5 hover:border-[#c9803d] hover:bg-[#f9efdd] hover:text-[#915826]"
               >

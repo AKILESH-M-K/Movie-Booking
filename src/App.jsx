@@ -5,6 +5,7 @@ import {
   Outlet,
   Route,
   Routes,
+  useLocation,
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -25,42 +26,53 @@ import Profile from "./pages/Profile";
 import Bookings from "./pages/Bookings";
 import Movies from "./pages/Movies";
 import useBooking from "./hooks/useBooking";
-import useMovies from "./hooks/useMovies";
 import { fetchMovieById } from "./api/movieApi";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import GuestRoute from "./auth/GuestRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useAuth } from "./auth/AuthContext";
 import { reserveSeats } from "./utils/availability";
+import { saveBooking } from "./utils/bookingStore";
 
 function HomeRoute() {
   const navigate = useNavigate();
-  return <Home onSelectMovie={(movie) => navigate(`/movie/${movie.id}`)} />;
+  const { selectMovie } = useBooking();
+  return (
+    <Home
+      onSelectMovie={(movie) => {
+        selectMovie(movie);
+        navigate(`/movie/${movie.id}`);
+      }}
+    />
+  );
 }
 
 function MovieRoute() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { chooseMovie } = useMovies();
+  const { selectMovie, selectedMovie } = useBooking();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch the individual movie's details dynamically from the REST API.
   useEffect(() => {
+    let cancelled = false;
     async function loadMovie() {
       try {
         setLoading(true);
         setError(null);
         const data = await fetchMovieById(id);
-        setMovie(data);
+        if (!cancelled) setMovie(data ?? null);
       } catch (err) {
-        setError(err.message || "Failed to load movie");
+        if (!cancelled) setError(err.message || "Failed to load movie");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
-
     loadMovie();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) {
@@ -74,9 +86,7 @@ function MovieRoute() {
   if (error || !movie) {
     return (
       <main className="min-h-[calc(100vh-80px)] bg-[#f9f4e4] px-5 py-16 text-center">
-        <h1 className="text-3xl font-black text-[#3d3324]">
-          {error || "Movie not found"}
-        </h1>
+        <h1 className="text-3xl font-black text-[#3d3324]">{error || "Movie not found"}</h1>
         <button
           type="button"
           onClick={() => navigate("/movies")}
@@ -93,7 +103,9 @@ function MovieRoute() {
       movie={movie}
       onBack={() => navigate("/movies")}
       onBook={() => {
-        chooseMovie(movie);
+        // Changing the movie resets theatre, show and seats, so a stale
+        // selection can never carry over to a different film.
+        if (selectedMovie?.id !== movie.id) selectMovie(movie);
         navigate("/booking/theatre");
       }}
     />
@@ -102,123 +114,110 @@ function MovieRoute() {
 
 function TheatreRoute() {
   const navigate = useNavigate();
+  const { selectedMovie } = useBooking();
+  if (!selectedMovie) return <Navigate to="/movies" replace />;
   return (
     <TheatreList
       onContinue={() => navigate("/booking/show")}
-      onBack={() => navigate("/movies")}
+      onBack={() => navigate(`/movie/${selectedMovie.id}`)}
     />
   );
+}
+
+// Booking steps are only reachable once the previous steps are complete.
+// This stops someone from typing /booking/seats into the address bar and
+// reaching checkout with an incomplete or inconsistent selection.
+function RequireBookingStep({ requires, children }) {
+  const { selectedMovie, selectedTheatre, selectedShow, selectedSeats } = useBooking();
+  const location = useLocation();
+  const checks = {
+    movie: Boolean(selectedMovie),
+    theatre: Boolean(selectedTheatre),
+    show: Boolean(selectedShow),
+    seats: selectedSeats.length > 0,
+  };
+
+  const missing = requires.find((key) => !checks[key]);
+  if (missing) {
+    const fallback = { movie: "/movies", theatre: "/booking/theatre", show: "/booking/show", seats: "/booking/seats" }[missing];
+    if (location.pathname !== fallback) return <Navigate to={fallback} replace />;
+  }
+  return children;
 }
 
 function ShowRoute() {
   const navigate = useNavigate();
   return (
-    <ShowTiming
-      onContinue={() => navigate("/booking/seats")}
-      onBack={() => navigate("/booking/theatre")}
-    />
+    <RequireBookingStep requires={["movie", "theatre"]}>
+      <ShowTiming onContinue={() => navigate("/booking/seats")} onBack={() => navigate("/booking/theatre")} />
+    </RequireBookingStep>
   );
 }
 
 function SeatsRoute() {
   const navigate = useNavigate();
   return (
-    <SeatSelection
-      onContinue={() => navigate("/booking/summary")}
-      onBack={() => navigate("/booking/show")}
-    />
+    <RequireBookingStep requires={["movie", "theatre", "show"]}>
+      <SeatSelection onContinue={() => navigate("/booking/summary")} onBack={() => navigate("/booking/show")} />
+    </RequireBookingStep>
   );
 }
 
 function SummaryRoute() {
   const navigate = useNavigate();
   return (
-    <BookingSummary
-      onContinue={() => navigate("/checkout")}
-      onBack={() => navigate("/booking/seats")}
-    />
+    <RequireBookingStep requires={["movie", "theatre", "show", "seats"]}>
+      <BookingSummary onContinue={() => navigate("/checkout")} onBack={() => navigate("/booking/seats")} />
+    </RequireBookingStep>
   );
 }
 
 function CheckoutRoute() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const {
-    selectedMovie,
-    selectedTheatre,
-    selectedShow,
-    selectedSeats,
-    customer,
-    payment,
-    totalAmount,
-    clearBooking,
-  } = useBooking();
+  const booking = useBooking();
+  const { clearBooking } = booking;
 
-  const handleBookingComplete = useCallback(() => {
-    if (
-      !selectedMovie ||
-      !selectedTheatre ||
-      !selectedShow ||
-      !selectedSeats.length
-    ) {
-      alert("Please complete movie, theatre, show, and seat selection first.");
-      navigate("/booking/theatre");
-      return;
+  const handleConfirm = useCallback(async () => {
+    const { selectedMovie, selectedTheatre, selectedShow, selectedSeats, customer, payment, totalAmount } = booking;
+
+    if (!selectedMovie || !selectedTheatre || !selectedShow || !selectedSeats.length) {
+      navigate("/booking/theatre", { replace: true });
+      throw new Error("Incomplete selection");
     }
 
-    const reservation = reserveSeats(
-      selectedMovie,
-      selectedTheatre,
-      selectedShow,
-      selectedSeats,
-    );
+    // Seats are re-validated at confirmation time because another booking may
+    // have taken them since the seat map was rendered.
+    const reservation = reserveSeats(selectedMovie, selectedTheatre, selectedShow, selectedSeats);
     if (!reservation.success) {
-      alert(
-        `These seats are no longer available: ${reservation.conflicts.join(", ")}. Please return to seat selection.`,
-      );
-      navigate("/booking/seats");
-      return;
+      navigate("/booking/seats", { replace: true });
+      throw new Error(`Seats ${reservation.conflicts.join(", ")} are no longer available.`);
     }
 
-    const booking = {
-      bookingId: `CB${Date.now()}`,
+    const ticket = {
+      bookingId: `CB${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
       movie: selectedMovie.title,
       theatre: selectedTheatre.name,
       show: selectedShow.time,
       seats: selectedSeats,
-      customer: {
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-      },
+      customer: { name: customer.name, email: customer.email, phone: customer.phone },
       amount: totalAmount,
       paymentMethod: payment.method,
       bookedAt: new Date().toISOString(),
     };
 
-    const key = `cinebookBooking:${user.email}`;
-    localStorage.setItem(key, JSON.stringify(booking));
-    alert(`Booking confirmed successfully!\nBooking ID: ${booking.bookingId}`);
+    if (!saveBooking(user.email, ticket)) {
+      throw new Error("Could not save your booking. Please try again.");
+    }
+
     clearBooking();
-    navigate("/bookings");
-  }, [
-    selectedMovie,
-    selectedTheatre,
-    selectedShow,
-    selectedSeats,
-    customer,
-    totalAmount,
-    payment.method,
-    clearBooking,
-    navigate,
-    user.email,
-  ]);
+    navigate("/bookings", { replace: true, state: { newBookingId: ticket.bookingId } });
+  }, [booking, clearBooking, navigate, user.email]);
 
   return (
-    <Payment
-      onConfirm={handleBookingComplete}
-      onBack={() => navigate("/booking/summary")}
-    />
+    <RequireBookingStep requires={["movie", "theatre", "show", "seats"]}>
+      <Payment onConfirm={handleConfirm} onBack={() => navigate("/booking/summary")} />
+    </RequireBookingStep>
   );
 }
 
@@ -234,12 +233,23 @@ function AuthenticatedLayout() {
   );
 }
 
+function NotFound() {
+  return (
+    <main className="flex min-h-[60vh] flex-col items-center justify-center px-5 text-center">
+      <h1 className="text-3xl font-black text-[#3d3324]">Page not found</h1>
+      <p className="mt-3 text-base text-[#736956]">The page you are looking for does not exist.</p>
+    </main>
+  );
+}
+
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+      <Route element={<GuestRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Route>
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AuthenticatedLayout />}>
@@ -256,11 +266,9 @@ function AppRoutes() {
           </Route>
 
           <Route path="/checkout" element={<CheckoutRoute />} />
-          <Route path="/payment" element={<CheckoutRoute />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/bookings" element={<Bookings />} />
-          <Route path="/theatres" element={<TheatreRoute />} />
-          <Route path="*" element={<Navigate to="/home" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Route>
     </Routes>

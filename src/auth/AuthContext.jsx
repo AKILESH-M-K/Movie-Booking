@@ -1,12 +1,19 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import {
-  isStrongEnoughPassword,
   normalizeEmail,
   sanitizeName,
   sanitizePhone,
 } from "../utils/validation";
 
 const AuthContext = createContext(null);
+
+// Placeholder record used to keep login timing consistent for unknown emails.
+const DUMMY_RECORD = {
+  salt: "AAAAAAAAAAAAAAAAAAAAAA==",
+  hash: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  algorithm: "PBKDF2-SHA-256",
+  iterations: 100000,
+};
 
 const ACCOUNT_KEY = "cinebookAccounts";
 const SESSION_KEY = "cinebookSession";
@@ -123,23 +130,28 @@ export function AuthProvider({ children }) {
     const accounts = getAccounts();
     const account = accounts.find((item) => item.email === email);
 
+    // Run the same work whether or not the account exists, so response time
+    // and message do not reveal which emails are registered.
+    const passwordMatches = account
+      ? await verifyPassword(userData.password, account.password)
+      : await verifyPassword(userData.password, DUMMY_RECORD);
+
     if (!account) {
       return {
         success: false,
-        field: "email",
-        error: "No CineBook account was found for this email address.",
+        field: "password",
+        error: "Incorrect email or password. Please try again.",
       };
     }
-
-    let passwordMatches = await verifyPassword(userData.password, account.password);
 
     // One-time migration for accounts created by the older project version,
     // which stored passwords as plaintext. Successful legacy login upgrades it
     // to a salted PBKDF2 hash immediately.
-    if (!passwordMatches && typeof account.password === "string") {
-      passwordMatches = account.password === userData.password;
+    let verified = passwordMatches;
+    if (!verified && typeof account.password === "string") {
+      verified = account.password === userData.password;
 
-      if (passwordMatches) {
+      if (verified) {
         account.password = await createPasswordRecord(userData.password);
         const migratedAccounts = accounts.map((item) =>
           item.email === email ? account : item,
@@ -148,11 +160,11 @@ export function AuthProvider({ children }) {
       }
     }
 
-    if (!passwordMatches) {
+    if (!verified) {
       return {
         success: false,
         field: "password",
-        error: "Incorrect password. Please check your password and try again.",
+        error: "Incorrect email or password. Please try again.",
       };
     }
 

@@ -1,3 +1,5 @@
+const DRAFT_KEY = "cinebookReduxBookingDraft";
+
 const PERSISTED_ACTIONS = new Set([
   "booking/selectMovie",
   "booking/selectTheatre",
@@ -5,6 +7,7 @@ const PERSISTED_ACTIONS = new Set([
   "booking/selectSeat",
   "booking/removeSeat",
   "booking/updateCustomer",
+  "booking/prefillCustomer",
 ]);
 
 const bookingMiddleware = (store) => (next) => (action) => {
@@ -12,7 +15,7 @@ const bookingMiddleware = (store) => (next) => (action) => {
 
   if (action.type === "booking/clearBooking") {
     try {
-      localStorage.removeItem("cinebookReduxBookingDraft");
+      localStorage.removeItem(DRAFT_KEY);
     } catch {
       // Storage failure must not break booking actions.
     }
@@ -21,6 +24,8 @@ const bookingMiddleware = (store) => (next) => (action) => {
 
   if (PERSISTED_ACTIONS.has(action.type)) {
     const state = store.getState().booking;
+    // Payment details are never persisted. Contact details are kept only so a
+    // refresh mid-checkout does not lose the draft.
     const safeDraft = {
       selectedMovie: state.selectedMovie,
       selectedTheatre: state.selectedTheatre,
@@ -30,8 +35,7 @@ const bookingMiddleware = (store) => (next) => (action) => {
     };
 
     try {
-      localStorage.setItem("cinebookReduxBookingDraft", JSON.stringify(safeDraft));
-      console.info(`[Booking Middleware] ${action.type}`, action.payload);
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(safeDraft));
     } catch {
       // Storage failure must not break booking actions.
     }

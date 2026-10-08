@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { safeReturnPath } from "../utils/navigation";
 import Input from "../components/common/Input";
 import Button from "../components/common/Button";
 import {
@@ -45,8 +46,7 @@ function Login() {
       return;
     }
 
-    const destination = location.state?.from || "/home";
-    navigate(destination, { replace: true });
+    navigate(safeReturnPath(location.state?.from), { replace: true });
   };
 
   return (
@@ -87,6 +87,7 @@ function Login() {
             id="email"
             label="Email Address"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -98,6 +99,7 @@ function Login() {
             id="password"
             label="Password"
             type="password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="8–128 characters"
@@ -106,7 +108,7 @@ function Login() {
           />
 
           <Button type="submit" className="w-full" disabled={submitting}>
-            {submitting ? "Verifying..." : "Sign In"}
+            {submitting ? "Signing in…" : "Sign in"}
           </Button>
         </form>
 
