@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#a4652a" />
     <meta name="description" content="CineBook is a movie ticket booking app. Browse movies, choose a theatre and show, pick your seats, and get your digital ticket." />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="__SITE_URL__/" />
+    <link rel="canonical" href="__SITE_URL__/Movie-Booking/" />
 
     <!-- Standard favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="/Movie-Booking/favicon-32x32.png" />
@@ -24,15 +24,33 @@
     <meta property="og:site_name" content="CineBook" />
     <meta property="og:title" content="CineBook - Movie Ticket Booking" />
     <meta property="og:description" content="Browse movies, choose theatres and shows, pick seats and book your tickets." />
-    <meta property="og:url" content="__SITE_URL__/" />
-    <meta property="og:image" content="__SITE_URL__/android-chrome-512x512.png" />
+    <meta property="og:url" content="__SITE_URL__/Movie-Booking/" />
+    <meta property="og:image" content="__SITE_URL__/Movie-Booking/android-chrome-512x512.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="CineBook - Movie Ticket Booking" />
     <meta name="twitter:description" content="Browse movies, choose theatres and shows, pick seats and book your tickets." />
-    <meta name="twitter:image" content="__SITE_URL__/android-chrome-512x512.png" />
+    <meta name="twitter:image" content="__SITE_URL__/Movie-Booking/android-chrome-512x512.png" />
 
     <title>CineBook - Movie Ticket Booking</title>
-    <script type="module" crossorigin src="/Movie-Booking/assets/index-DMU78reO.js"></script>
+
+    <script>
+      // GitHub Pages serves 404.html for deep links and passes the original
+      // path in ?redirect=. Restore it so the SPA router sees the real URL.
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var redirect = params.get("redirect");
+        if (!redirect) return;
+        var base = "/Movie-Booking/";
+        var target = decodeURIComponent(redirect);
+        // Only same-app paths are accepted; anything else falls back to home.
+        if (target.charAt(0) !== "/" || target.indexOf("//") === 0) target = "/";
+        var rest = target;
+        while (rest.charAt(0) === "/") { rest = rest.slice(1); }
+        var clean = target.indexOf(base) === 0 ? target : base + rest;
+        window.history.replaceState(null, "", clean);
+      })();
+    </script>
+    <script type="module" crossorigin src="/Movie-Booking/assets/index-B5sr6Lma.js"></script>
     <link rel="stylesheet" crossorigin href="/Movie-Booking/assets/index-C5kKINC7.css">
   </head>
   <body>
