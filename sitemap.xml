@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Replace __SITE_URL__ with the deployed origin before publishing. -->
+<!-- Replace https://akilesh-m-k.github.io with the deployed origin before publishing. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>__SITE_URL__/Movie-Booking/</loc></url>
-  <url><loc>__SITE_URL__/Movie-Booking/movies</loc></url>
+  <url><loc>https://akilesh-m-k.github.io/Movie-Booking/</loc></url>
+  <url><loc>https://akilesh-m-k.github.io/Movie-Booking/movies</loc></url>
 </urlset>

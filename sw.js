@@ -1,4 +1,4 @@
-const CACHE_NAME = "cinebook-v4";
+const CACHE_NAME = "cinebook-v5";
 const BASE_PATH = "/Movie-Booking/";
 const APP_SHELL = [
   BASE_PATH,
