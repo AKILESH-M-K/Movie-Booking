@@ -1,0 +1,11 @@
+# CineBook is a public site. Private, user-specific pages are not meant for indexing.
+User-agent: *
+Allow: /Movie-Booking/
+Disallow: /Movie-Booking/booking/
+Disallow: /Movie-Booking/checkout
+Disallow: /Movie-Booking/payment
+Disallow: /Movie-Booking/profile
+Disallow: /Movie-Booking/bookings
+
+# Replace __SITE_URL__ with the deployed origin before publishing.
+Sitemap: __SITE_URL__/Movie-Booking/sitemap.xml

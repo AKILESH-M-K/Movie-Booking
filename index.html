@@ -4,35 +4,39 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#a4652a" />
-    <meta name="description" content="CineBook movie ticket booking application" />
+    <meta name="description" content="CineBook is a movie ticket booking app. Browse movies, choose a theatre and show, pick your seats, and get your digital ticket." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="__SITE_URL__/" />
 
-    <!-- Standard Favicons -->
+    <!-- Standard favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/Movie-Booking/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/Movie-Booking/favicon-16x16.png" />
     <link rel="icon" type="image/x-icon" href="/Movie-Booking/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/Movie-Booking/android-chrome-192x192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/Movie-Booking/android-chrome-512x512.png" />
 
-    <!-- Apple Touch Icon -->
+    <!-- Apple touch icon -->
     <link rel="apple-touch-icon" sizes="180x180" href="/Movie-Booking/apple-touch-icon.png" />
 
-    <!-- Web App Manifest -->
+    <!-- Web app manifest -->
     <link rel="manifest" href="/Movie-Booking/site.webmanifest" />
 
-    <title>CineBook - Movie Booking</title>
-    <script type="module" crossorigin src="/Movie-Booking/assets/index-BuDvjeE6.js"></script>
-    <link rel="stylesheet" crossorigin href="/Movie-Booking/assets/index-BMPah3O-.css">
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CineBook" />
+    <meta property="og:title" content="CineBook - Movie Ticket Booking" />
+    <meta property="og:description" content="Browse movies, choose theatres and shows, pick seats and book your tickets." />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta property="og:image" content="__SITE_URL__/android-chrome-512x512.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="CineBook - Movie Ticket Booking" />
+    <meta name="twitter:description" content="Browse movies, choose theatres and shows, pick seats and book your tickets." />
+    <meta name="twitter:image" content="__SITE_URL__/android-chrome-512x512.png" />
+
+    <title>CineBook - Movie Ticket Booking</title>
+    <script type="module" crossorigin src="/Movie-Booking/assets/index-DMU78reO.js"></script>
+    <link rel="stylesheet" crossorigin href="/Movie-Booking/assets/index-C5kKINC7.css">
   </head>
   <body>
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      const redirect = params.get("redirect");
-      if (redirect) {
-        const target = decodeURIComponent(redirect);
-        const cleanTarget = target.startsWith("/Movie-Booking/")
-          ? target
-          : `/Movie-Booking/${target.replace(/^\/+/, "")}`;
-        window.history.replaceState({}, "", cleanTarget);
-      }
-    </script>
+    <noscript>CineBook needs JavaScript enabled to browse movies and book tickets.</noscript>
     <div id="root"></div>
   </body>
 </html>

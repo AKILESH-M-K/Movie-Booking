@@ -1,4 +1,4 @@
-const CACHE_NAME = "cinebook-v3";
+const CACHE_NAME = "cinebook-v4";
 const BASE_PATH = "/Movie-Booking/";
 const APP_SHELL = [
   BASE_PATH,
@@ -9,9 +9,7 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)),
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
   self.skipWaiting();
 });
 
@@ -35,6 +33,8 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+  // Only cache same-origin app assets. Third-party requests and API responses
+  // are never cached, so user-specific data cannot be served from the cache.
   if (url.origin !== self.location.origin) return;
   if (!url.pathname.startsWith(BASE_PATH)) return;
 
@@ -42,8 +42,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(`${BASE_PATH}index.html`, copy));
+          }
           return response;
         })
         .catch(() => caches.match(`${BASE_PATH}index.html`)),
@@ -51,12 +53,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Assets with hashed filenames are immutable; cache them after first fetch.
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
-
       return fetch(request).then((response) => {
-        if (response.ok) {
+        if (response.ok && response.type === "basic") {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
