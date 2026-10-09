@@ -1,8 +1,16 @@
-const CONTROL_CHARS = /[\u0000-\u001F\u007F]/g;
+// Strips ASCII control characters (U+0000–U+001F and U+007F) without a regex,
+// so the source contains no raw control characters for lint to flag.
+function stripControlChars(value) {
+  let result = "";
+  for (const char of value) {
+    const code = char.charCodeAt(0);
+    if (code > 0x1f && code !== 0x7f) result += char;
+  }
+  return result;
+}
 
 export function sanitizeText(value, maxLength = 100) {
-  return String(value ?? "")
-    .replace(CONTROL_CHARS, "")
+  return stripControlChars(String(value ?? ""))
     .trim()
     .slice(0, maxLength);
 }
@@ -22,9 +30,7 @@ export function sanitizePhone(value) {
 }
 
 export function sanitizeSearch(value) {
-  return String(value ?? "")
-    .replace(CONTROL_CHARS, "")
-    .slice(0, 80);
+  return stripControlChars(String(value ?? "")).slice(0, 80);
 }
 
 export function isValidEmail(value) {

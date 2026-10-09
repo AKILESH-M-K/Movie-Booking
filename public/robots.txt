@@ -7,5 +7,5 @@ Disallow: /Movie-Booking/payment
 Disallow: /Movie-Booking/profile
 Disallow: /Movie-Booking/bookings
 
-# Replace __SITE_URL__ with the deployed origin before publishing.
-Sitemap: __SITE_URL__/Movie-Booking/sitemap.xml
+# Replace https://akilesh-m-k.github.io with the deployed origin before publishing.
+Sitemap: https://akilesh-m-k.github.io/Movie-Booking/sitemap.xml

@@ -27,14 +27,14 @@ function Movies() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#f9f4e4] px-5 py-10">
+    <main className="min-h-screen bg-[#f6f8fb] px-5 py-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-10">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-[#a4652a]">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-[#e4572e]">
             Explore
           </p>
 
-          <h1 className="mt-2 text-4xl font-black text-[#3d3324]">Movies</h1>
+          <h1 className="mt-2 text-4xl font-black text-[#14213d]">Movies</h1>
 
           <p className="mt-3 text-lg text-[#776a54]">
             Choose a movie and find your perfect show.

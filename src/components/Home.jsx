@@ -22,23 +22,25 @@ function Home({ onSelectMovie }) {
   };
 
   return (
-    <main id="home" className="bg-[#f9f4e4]">
-      <section className="relative overflow-hidden border-b border-[#eae3cc] bg-[#f2ebd8]">
-        <div className="absolute -left-24 top-8 h-72 w-72 rounded-full bg-[#c9803d]/10 blur-3xl" />
-        <div className="absolute -right-24 top-16 h-72 w-72 rounded-full bg-[#6d7650]/10 blur-3xl" />
+    <main id="home" className="bg-[#f6f8fb]">
+      <section className="relative overflow-hidden border-b border-[#e4e7ec] bg-[#eef2f7]">
+        <div className="absolute -left-24 top-8 h-72 w-72 rounded-full bg-[#e4572e]/10 blur-3xl" />
+        <div className="absolute -right-24 top-16 h-72 w-72 rounded-full bg-[#2a9d8f]/10 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl px-5 pb-14 pt-16 text-center lg:px-8 lg:pb-20 lg:pt-24">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#ce9d68]/40 bg-[#fffcf5]/70 px-4 py-2 text-sm font-bold tracking-wide text-[#9b5d28] shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-[#c9803d]" />
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#f08a70]/40 bg-[#ffffff]/70 px-4 py-2 text-sm font-bold tracking-wide text-[#9b5d28] shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#e4572e]" />
             MOVIE TICKETS, MADE SIMPLE
           </div>
 
-          <h2 className="mx-auto max-w-4xl text-4xl font-black tracking-tight text-[#3d3324] sm:text-6xl lg:text-7xl">
+          <h2 className="mx-auto max-w-4xl text-4xl font-black uppercase tracking-tight text-[#14213d] sm:text-6xl lg:text-7xl">
             Your next movie night
-            <span className="block text-[#b16b2b]">starts here.</span>
+            <span className="font-script mt-1 block text-6xl font-normal normal-case tracking-normal text-[#e4572e] sm:text-7xl lg:text-8xl">
+              starts here.
+            </span>
           </h2>
 
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-[#6a604d] sm:text-lg">
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-[#667085] sm:text-lg">
             Discover movies, explore theatres, choose your seats, and complete
             your booking in a simple and comfortable flow.
           </p>
@@ -59,13 +61,13 @@ function Home({ onSelectMovie }) {
       >
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#9a7547]">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#667085]">
               Browse collection
             </p>
-            <h2 className="mt-2 text-3xl font-black text-[#3d3324] sm:text-4xl">
+            <h2 className="mt-2 text-3xl font-black text-[#14213d] sm:text-4xl">
               Now Showing
             </h2>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-[#736956]">
+            <p className="mt-3 max-w-2xl text-base leading-7 text-[#667085]">
               Search by title, language, genre, or cast and choose a movie to
               begin booking.
             </p>
@@ -79,8 +81,8 @@ function Home({ onSelectMovie }) {
                 onClick={() => filterByGenre(genre)}
                 className={`rounded-full border px-4 py-2.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 ${
                   selectedGenre === genre
-                    ? "border-[#a4652a] bg-[#a4652a] text-white shadow-md shadow-[#a4652a]/20"
-                    : "border-[#e4dac2] bg-[#fffcf5] text-[#6f6550] hover:border-[#c9803d] hover:bg-[#fdf6e5] hover:text-[#915826]"
+                    ? "border-[#e4572e] bg-[#e4572e] text-white shadow-md shadow-[#e4572e]/20"
+                    : "border-[#e4e7ec] bg-[#ffffff] text-[#6f6550] hover:border-[#e4572e] hover:bg-[#fff7f4] hover:text-[#c94423]"
                 }`}
               >
                 {genre}

@@ -26,16 +26,19 @@ export default function useMovies() {
     loadMovies();
   }, []);
 
-  const genres = useMemo(() => ["All", ...new Set(moviesData.map((movie) => movie.genre))], [moviesData]);
+  const genres = useMemo(
+    () => ["All", ...new Set(moviesData.map((movie) => movie.genre))],
+    [moviesData],
+  );
   const filteredMovies = useMemo(() => {
     const search = searchTerm.toLowerCase().trim();
     return moviesData.filter((movie) => {
       const title = movie.title?.toLowerCase() || "";
-      const genre = movie.genre?.toLowerCase() || "";
-      const cast = Array.isArray(movie.cast) ? movie.cast.join(" ").toLowerCase() : movie.cast?.toLowerCase() || "";
-      const language = movie.language?.toLowerCase() || "";
-      return (!search || title.includes(search) || genre.includes(search) || cast.includes(search) || language.includes(search)) &&
-        (selectedGenre === "All" || movie.genre === selectedGenre || genre.includes(selectedGenre.toLowerCase()));
+
+      return (
+        (!search || title.includes(search)) &&
+        (selectedGenre === "All" || movie.genre === selectedGenre)
+      );
     });
   }, [moviesData, searchTerm, selectedGenre]);
 
@@ -44,5 +47,17 @@ export default function useMovies() {
   const focusSearch = useCallback(() => searchInputRef.current?.focus(), []);
   const chooseMovie = useCallback((movie) => selectMovie(movie), [selectMovie]);
 
-  return { movies: filteredMovies, loading, error, genres, searchTerm, selectedGenre, searchInputRef, searchMovies, filterByGenre, focusSearch, chooseMovie };
+  return {
+    movies: filteredMovies,
+    loading,
+    error,
+    genres,
+    searchTerm,
+    selectedGenre,
+    searchInputRef,
+    searchMovies,
+    filterByGenre,
+    focusSearch,
+    chooseMovie,
+  };
 }

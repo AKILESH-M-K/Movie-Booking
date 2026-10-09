@@ -19,7 +19,7 @@ function SearchBar({ value, onChange, inputRef }) {
         value={value}
         onChange={(e) => onChange(sanitizeSearch(e.target.value))}
         placeholder="Search movies, genres, languages or cast..."
-        className="w-full rounded-2xl border border-[#e3d8c0] bg-[#fffef7] px-12 py-4 text-base text-[#3d3324] shadow-[0_10px_30px_rgba(94,67,45,0.08)] outline-none transition-all duration-200 placeholder:text-[#a99f8a] focus:border-[#c9803d] focus:ring-4 focus:ring-[#c9803d]/10"
+        className="w-full rounded-2xl border border-[#e3d8c0] bg-[#ffffff] px-12 py-4 text-base text-[#14213d] shadow-[0_10px_30px_rgba(94,67,45,0.08)] outline-none transition-all duration-200 placeholder:text-[#a99f8a] focus:border-[#e4572e] focus:ring-4 focus:ring-[#e4572e]/10"
       />
     </div>
   );

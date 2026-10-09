@@ -1,44 +1,95 @@
+@import url("https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap");
 @import "tailwindcss";
 
 :root {
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  color: #3d3324;
-  background: #f9f4e4;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #14213d;
+  background: #f6f8fb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  --ink: #14213d;
+  --muted: #667085;
+  --line: #e4e7ec;
+  --surface: #ffffff;
+  --soft: #f7f9fc;
+  --brand: #e4572e;
+  --brand-dark: #c94423;
+  --mint: #2a9d8f;
 }
 
-* {
-  box-sizing: border-box;
+h1, h2, h3, h4 {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: weight;
+  letter-spacing: -0.035em;
 }
 
-html {
-  scroll-behavior: smooth;
+.font-script {
+  font-family: "Alex Brush", "Segoe Script", cursive;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 0.9;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  background: #f9f4e4;
-}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; background: #f6f8fb; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+::selection { background: #ffd9ce; color: #14213d; }
 
-button,
-input {
-  font: inherit;
+.ticket-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px 18px;
+  border: 1px solid #b8e0d2;
+  border-radius: 16px;
+  background: #e6f5ef;
+  color: #147d61;
 }
+.ticket-success strong { display: block; font-size: 15px; }
+.ticket-success p { margin: 4px 0 0; color: #327b6b; font-size: 14px; }
+.ticket-success-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #2a9d8f;
+  color: white;
+  font-weight: 900;
+}
+.ticket-card-new { border-color: #f08a70; box-shadow: 0 20px 50px rgba(228, 87, 46, 0.14); }
+.ticket-qr-wrap { display: flex; flex-direction: column; align-items: center; }
+.ticket-qr-frame { display: grid; place-items: center; width: 220px; min-height: 220px; border-radius: 14px; background: #fff; }
+.ticket-qr-frame img { display: block; width: 220px; height: 220px; border-radius: 10px; }
+.ticket-qr-frame span { color: #667085; font-size: 13px; }
+.ticket-qr-caption { margin: 14px 0 0; color: #475467; font-size: 13px; font-weight: 800; }
+.ticket-qr-ref { max-width: 220px; margin: 5px 0 0; overflow-wrap: anywhere; color: #e4572e; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 800; }
 
-button {
-  cursor: pointer;
-}
-
-::selection {
-  background: #e8caa6;
-  color: #3d3324;
-}
+.ticket-verify-page { min-height: 100vh; padding: 30px 18px 48px; background: linear-gradient(145deg, #eef2f7 0%, #f8fafc 55%, #fff1ed 100%); color: #14213d; }
+.ticket-verify-shell { width: min(100%, 620px); margin: 0 auto; }
+.ticket-verify-brand { display: flex; align-items: center; justify-content: center; gap: 10px; color: #14213d; font-size: 19px; font-weight: 900; letter-spacing: -0.03em; }
+.ticket-verify-brand span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: #e4572e; color: #fff; font-size: 13px; letter-spacing: 0; }
+.ticket-verify-card { position: relative; margin-top: 26px; padding: 28px; overflow: hidden; border: 1px solid #e4e7ec; border-radius: 28px; background: #fff; box-shadow: 0 24px 60px rgba(20, 33, 61, 0.14); }
+.ticket-verify-card::before, .ticket-verify-card::after { content: ""; position: absolute; top: 134px; width: 24px; height: 24px; border-radius: 50%; background: #eef2f7; }
+.ticket-verify-card::before { left: -13px; } .ticket-verify-card::after { right: -13px; }
+.ticket-verify-topline { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding-bottom: 22px; border-bottom: 1px dashed #d0d5dd; }
+.ticket-verify-kicker, .ticket-verify-overline { color: #667085; font-size: 12px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.ticket-verify-status { padding: 7px 11px; border-radius: 999px; background: #e6f5ef; color: #147d61; font-size: 12px; font-weight: 900; }
+.ticket-verify-check { display: grid; place-items: center; width: 52px; height: 52px; margin: 26px auto 14px; border-radius: 50%; background: #2a9d8f; color: #fff; font-size: 26px; font-weight: 900; }
+.ticket-verify-overline { margin: 0; text-align: center; color: #2a9d8f; }
+.ticket-verify-card h1 { margin: 8px 0 0; color: #14213d; text-align: center; font-size: clamp(30px, 7vw, 48px); line-height: 1.02; }
+.ticket-verify-subtitle { margin: 10px 0 28px; color: #667085; text-align: center; font-size: 15px; }
+.ticket-verify-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 22px 0; border-top: 1px solid #e4e7ec; border-bottom: 1px solid #e4e7ec; }
+.ticket-verify-details div { padding: 12px; border-radius: 13px; background: #f7f9fc; }
+.ticket-verify-details span, .ticket-verify-reference span { display: block; color: #98a2b3; font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.ticket-verify-details strong { display: block; margin-top: 5px; color: #344054; font-size: 16px; }
+.ticket-verify-reference { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; padding-top: 22px; }
+.ticket-verify-reference strong { min-width: 0; overflow-wrap: anywhere; color: #e4572e; font-family: ui-monospace, monospace; font-size: 12px; }
+.ticket-verify-note { margin: 26px 0 0; color: #667085; text-align: center; font-size: 13px; }
+.ticket-verify-back { display: block; margin-top: 20px; color: #e4572e; text-align: center; font-size: 14px; font-weight: 900; text-decoration: none; }
+@media (max-width: 480px) { .ticket-verify-card { padding: 22px 18px; } .ticket-verify-details { grid-template-columns: 1fr; } }

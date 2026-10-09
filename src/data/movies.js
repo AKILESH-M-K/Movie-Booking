@@ -279,6 +279,90 @@ const movies = [
       "A banker sentenced to prison forms an enduring friendship while holding onto hope for freedom.",
     image: "https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
   },
+
+  {
+    id: 121,
+    title: "The Matrix",
+    genre: "Sci-Fi",
+    rating: 4.8,
+    duration: "2h 16m",
+    price: 220,
+    language: "English",
+    cast: "Keanu Reeves, Laurence Fishburne, Carrie-Anne Moss",
+    description:
+      "A computer hacker discovers that reality is a simulation and joins a rebellion against its controllers.",
+    image: "/Movie-Booking/posters/matrix.webp",
+  },
+
+  {
+    id: 122,
+    title: "Barbie",
+    genre: "Comedy",
+    rating: 4.4,
+    duration: "1h 54m",
+    price: 240,
+    language: "English",
+    cast: "Margot Robbie, Ryan Gosling, America Ferrera",
+    description:
+      "Barbie and Ken leave their picture-perfect world and discover what life is like in the real world.",
+    image: "/Movie-Booking/posters/barbie.webp",
+  },
+
+  {
+    id: 123,
+    title: "Coco",
+    genre: "Animation",
+    rating: 4.8,
+    duration: "1h 45m",
+    price: 190,
+    language: "English",
+    cast: "Anthony Gonzalez, Gael García Bernal, Benjamin Bratt",
+    description:
+      "Young Miguel journeys to the Land of the Dead to uncover his family's history and follow his love of music.",
+    image: "/Movie-Booking/posters/coco.webp",
+  },
+
+  {
+    id: 124,
+    title: "The Batman",
+    genre: "Action",
+    rating: 4.5,
+    duration: "2h 56m",
+    price: 250,
+    language: "English",
+    cast: "Robert Pattinson, Zoë Kravitz, Paul Dano",
+    description:
+      "A young Batman investigates a trail of clues that exposes corruption in Gotham City.",
+    image: "/Movie-Booking/posters/the-batman.webp",
+  },
+
+  {
+    id: 125,
+    title: "La La Land",
+    genre: "Romance",
+    rating: 4.5,
+    duration: "2h 8m",
+    price: 210,
+    language: "English",
+    cast: "Ryan Gosling, Emma Stone, John Legend",
+    description:
+      "An aspiring actor and a jazz musician fall in love while pursuing their dreams in Los Angeles.",
+    image: "/Movie-Booking/posters/la-la-land.webp",
+  },
+
+  {
+    id: 126,
+    title: "RRR",
+    genre: "Action",
+    rating: 4.7,
+    duration: "3h 7m",
+    price: 240,
+    language: "Telugu",
+    cast: "N. T. Rama Rao Jr., Ram Charan, Alia Bhatt",
+    description:
+      "Two legendary revolutionaries form an extraordinary friendship while fighting colonial rule in India.",
+    image: "/Movie-Booking/posters/rrr.webp",
+  },
 ];
 
 export default movies;

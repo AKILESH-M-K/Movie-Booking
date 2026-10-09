@@ -1,11 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   normalizeEmail,
   sanitizeName,
   sanitizePhone,
 } from "../utils/validation";
 
-const AuthContext = createContext(null);
+import { AuthContext } from "./authContextObject";
+import { apiClient, API_ENABLED, TOKEN_KEY, apiError } from "../api/apiClient";
 
 // Placeholder record used to keep login timing consistent for unknown emails.
 const DUMMY_RECORD = {
@@ -33,6 +34,7 @@ function getAccounts() {
 
 function getSessionUser() {
   try {
+    if (API_ENABLED && !sessionStorage.getItem(TOKEN_KEY)) return null;
     const value = sessionStorage.getItem(SESSION_KEY);
     return value ? JSON.parse(value) : null;
   } catch {
@@ -56,7 +58,9 @@ function base64ToBytes(value) {
 
 async function hashPassword(password, salt) {
   if (!window.crypto?.subtle) {
-    throw new Error("Secure password hashing is not available in this browser.");
+    throw new Error(
+      "Secure password hashing is not available in this browser.",
+    );
   }
 
   const encoder = new TextEncoder();
@@ -125,8 +129,37 @@ async function verifyPassword(password, record) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getSessionUser);
 
+  useEffect(() => {
+    const clearExpiredSession = () => {
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
+      setUser(null);
+    };
+    window.addEventListener("cinebook:unauthorized", clearExpiredSession);
+    return () =>
+      window.removeEventListener("cinebook:unauthorized", clearExpiredSession);
+  }, []);
+
   const login = useCallback(async (userData) => {
     const email = normalizeEmail(userData.email);
+    if (API_ENABLED) {
+      try {
+        const { data } = await apiClient.post("/auth/login", {
+          email,
+          password: userData.password,
+        });
+        sessionStorage.setItem(TOKEN_KEY, data.token);
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(data.user));
+        setUser(data.user);
+        return { success: true };
+      } catch (error) {
+        return {
+          success: false,
+          field: "password",
+          error: apiError(error, "Incorrect email or password."),
+        };
+      }
+    }
     const accounts = getAccounts();
     const account = accounts.find((item) => item.email === email);
 
@@ -181,6 +214,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signup = useCallback(async (userData) => {
+    if (API_ENABLED) {
+      try {
+        const { data } = await apiClient.post("/auth/signup", userData);
+        return { success: true, user: data.user };
+      } catch (error) {
+        return {
+          success: false,
+          error: apiError(error, "Unable to create account."),
+        };
+      }
+    }
     const accounts = getAccounts();
     const email = normalizeEmail(userData.email);
 
@@ -214,9 +258,26 @@ export function AuthProvider({ children }) {
   }, []);
 
   const updateProfile = useCallback(
-    (profileData) => {
+    async (profileData) => {
       if (!user) {
         return { success: false, error: "You must be logged in." };
+      }
+
+      if (API_ENABLED) {
+        try {
+          const { data } = await apiClient.patch("/auth/profile", {
+            name: sanitizeName(profileData.name),
+            phone: sanitizePhone(profileData.phone),
+          });
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(data.user));
+          setUser(data.user);
+          return { success: true };
+        } catch (error) {
+          return {
+            success: false,
+            error: apiError(error, "Could not update profile."),
+          };
+        }
       }
 
       const accounts = getAccounts();
@@ -250,6 +311,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     setUser(null);
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
   }, []);
 
   const value = useMemo(
@@ -265,10 +327,4 @@ export function AuthProvider({ children }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
-  return context;
 }

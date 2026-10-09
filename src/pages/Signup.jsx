@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import Input from "../components/common/Input";
 import Button from "../components/common/Button";
 import {
@@ -80,15 +80,15 @@ function Signup() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f9f4e4] px-5 py-12 lg:px-8">
-      <div className="w-full max-w-lg rounded-3xl border border-[#eae3cc] bg-[#fffef7] p-7 shadow-[0_18px_45px_rgba(82,60,42,0.12)] sm:p-9">
-        <p className="text-sm font-black uppercase tracking-[0.2em] text-[#9a7547]">
+    <main className="flex min-h-screen items-center justify-center bg-[#f6f8fb] px-5 py-12 lg:px-8">
+      <div className="w-full max-w-lg rounded-3xl border border-[#e4e7ec] bg-[#ffffff] p-7 shadow-[0_18px_45px_rgba(82,60,42,0.12)] sm:p-9">
+        <p className="text-sm font-black uppercase tracking-[0.2em] text-[#667085]">
           CineBook Account
         </p>
-        <h1 className="mt-2 text-3xl font-black text-[#3d3324]">
+        <h1 className="mt-2 text-3xl font-black text-[#14213d]">
           Create your profile
         </h1>
-        <p className="mt-3 text-base leading-7 text-[#736956]">
+        <p className="mt-3 text-base leading-7 text-[#667085]">
           Your account is created first. You will then sign in to start booking.
         </p>
 
@@ -152,7 +152,7 @@ function Signup() {
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-black text-[#a4652a] hover:text-[#875022]"
+            className="font-black text-[#e4572e] hover:text-[#c94423]"
           >
             Sign in
           </Link>

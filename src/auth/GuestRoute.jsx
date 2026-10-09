@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 import { safeReturnPath } from "../utils/navigation";
 
 // Login and signup are for signed-out users only. Signed-in users are sent

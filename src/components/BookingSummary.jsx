@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import useBooking from "../hooks/useBooking";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import Input from "./common/Input";
 import { isValidEmail, isValidPhone, sanitizeName, sanitizePhone } from "../utils/validation";
 
@@ -52,20 +52,20 @@ function BookingSummary({ onContinue, onBack }) {
   const seatsLabel = selectedSeats.join(", ") || "None";
 
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-[#f9f4e4] px-5 py-10 lg:px-8 lg:py-14">
+    <main className="min-h-[calc(100vh-80px)] bg-[#f6f8fb] px-5 py-10 lg:px-8 lg:py-14">
       <div className="mx-auto max-w-5xl">
-        <button type="button" onClick={onBack} className="mb-8 text-base font-bold text-[#7e715b] hover:text-[#a4652a]">
+        <button type="button" onClick={onBack} className="mb-8 text-base font-bold text-[#667085] hover:text-[#e4572e]">
           ← Back to Seats
         </button>
-        <p className="text-sm font-black uppercase tracking-[0.2em] text-[#9a7547]">Step 5 of 6</p>
-        <h1 className="mt-2 text-4xl font-black text-[#3d3324]">Booking Summary</h1>
-        <p className="mt-3 text-base leading-7 text-[#736956]">
+        <p className="text-sm font-black uppercase tracking-[0.2em] text-[#667085]">Step 5 of 6</p>
+        <h1 className="mt-2 text-4xl font-black text-[#14213d]">Booking Summary</h1>
+        <p className="mt-3 text-base leading-7 text-[#667085]">
           Review your booking. {hasRequiredDetails && user ? "Your contact details come from your profile." : "Enter the details missing from your profile."}
         </p>
 
         <div className="mt-9 grid gap-6 lg:grid-cols-2">
-          <section aria-labelledby="summary-heading" className="rounded-2xl border border-[#eae3cc] bg-[#fffef7] p-6 shadow-sm sm:p-7">
-            <h2 id="summary-heading" className="text-2xl font-black text-[#453928]">{selectedMovie?.title}</h2>
+          <section aria-labelledby="summary-heading" className="rounded-2xl border border-[#e4e7ec] bg-[#ffffff] p-6 shadow-sm sm:p-7">
+            <h2 id="summary-heading" className="text-2xl font-black text-[#1d3557]">{selectedMovie?.title}</h2>
             <dl className="mt-6 space-y-4 text-base">
               <SummaryRow label="Theatre" value={selectedTheatre?.name || "Not selected"} />
               <SummaryRow label="Location" value={selectedTheatre?.location || "—"} />
@@ -73,19 +73,19 @@ function BookingSummary({ onContinue, onBack }) {
               <SummaryRow label="Format" value={selectedShow?.format || "—"} />
               <SummaryRow label="Seats" value={seatsLabel} highlight />
             </dl>
-            <dl className="mt-7 border-t border-[#efe8d6] pt-5">
+            <dl className="mt-7 border-t border-[#e4e7ec] pt-5">
               <SummaryRow label="Tickets" value={`₹${ticketPrice}`} />
               <SummaryRow label="Convenience charge" value={`₹${convenienceCharge}`} />
-              <div className="mt-5 flex items-center justify-between border-t border-[#efe8d6] pt-5">
-                <dt className="text-xl font-black text-[#453928]">Total</dt>
-                <dd className="text-2xl font-black text-[#a4652a]">₹{totalAmount}</dd>
+              <div className="mt-5 flex items-center justify-between border-t border-[#e4e7ec] pt-5">
+                <dt className="text-xl font-black text-[#1d3557]">Total</dt>
+                <dd className="text-2xl font-black text-[#e4572e]">₹{totalAmount}</dd>
               </div>
             </dl>
           </section>
 
-          <section aria-labelledby="contact-heading" className="rounded-2xl border border-[#eae3cc] bg-[#fffef7] p-6 shadow-sm sm:p-7">
-            <h2 id="contact-heading" className="text-2xl font-black text-[#453928]">Contact details</h2>
-            <p className="mt-2 text-base leading-7 text-[#7e715b]">These details will be attached to your ticket.</p>
+          <section aria-labelledby="contact-heading" className="rounded-2xl border border-[#e4e7ec] bg-[#ffffff] p-6 shadow-sm sm:p-7">
+            <h2 id="contact-heading" className="text-2xl font-black text-[#1d3557]">Contact details</h2>
+            <p className="mt-2 text-base leading-7 text-[#667085]">These details will be attached to your ticket.</p>
             <form onSubmit={handleSubmit} className="mt-6 space-y-5" noValidate>
               <Input
                 id={ids.name}
@@ -119,7 +119,7 @@ function BookingSummary({ onContinue, onBack }) {
               />
               <button
                 type="submit"
-                className="w-full rounded-xl bg-[#a4652a] py-4 text-base font-black text-white transition-all hover:-translate-y-0.5 hover:bg-[#875022] hover:shadow-xl"
+                className="w-full rounded-xl bg-[#e4572e] py-4 text-base font-black text-white transition-all hover:-translate-y-0.5 hover:bg-[#c94423] hover:shadow-xl"
               >
                 Continue to Payment →
               </button>
@@ -134,8 +134,8 @@ function BookingSummary({ onContinue, onBack }) {
 function SummaryRow({ label, value, highlight }) {
   return (
     <div className="flex items-start justify-between gap-5">
-      <dt className="text-[#847960]">{label}</dt>
-      <dd className={`text-right font-bold ${highlight ? "text-[#a4652a]" : "text-[#4b3f2d]"}`}>{value}</dd>
+      <dt className="text-[#667085]">{label}</dt>
+      <dd className={`text-right font-bold ${highlight ? "text-[#e4572e]" : "text-[#344054]"}`}>{value}</dd>
     </div>
   );
 }

@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local API secrets
+server/.env
+
+# Jest test artifacts
+coverage/

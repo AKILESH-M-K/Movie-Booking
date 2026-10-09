@@ -1,6 +1,6 @@
 function Footer() {
   return (
-    <footer id="bookings" className="border-t border-[#e5dcc5] bg-[#f2ebd8]">
+    <footer id="bookings" className="border-t border-[#e5dcc5] bg-[#eef2f7]">
       <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-10 sm:flex-row sm:items-center sm:justify-between lg:px-8">
         <div>
           <div className="flex items-center gap-2">
@@ -11,7 +11,7 @@ function Footer() {
             Your seat. Your movie. Your experience.
           </p>
         </div>
-        <p className="text-sm font-medium text-[#7e715b]">
+        <p className="text-sm font-medium text-[#667085]">
           © 2026 CineBook. All rights reserved.
         </p>
       </div>
