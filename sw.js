@@ -1,4 +1,4 @@
-const CACHE_NAME = "cinebook-v5";
+const CACHE_NAME = "cinebook-v7";
 const BASE_PATH = "/Movie-Booking/";
 const APP_SHELL = [
   BASE_PATH,
@@ -15,7 +15,7 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
+    Promise.all([self.clients.claim(), caches
       .keys()
       .then((keys) =>
         Promise.all(
@@ -23,9 +23,8 @@ self.addEventListener("activate", (event) => {
             .filter((key) => key.startsWith("cinebook-") && key !== CACHE_NAME)
             .map((key) => caches.delete(key)),
         ),
-      ),
+      ),]),
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -40,27 +39,29 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(`${BASE_PATH}index.html`, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(`${BASE_PATH}index.html`)),
+      fetch(request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(`${BASE_PATH}index.html`, copy)));
+        }
+        return response;
+      }).catch(async () => (await caches.match(request)) || caches.match(`${BASE_PATH}index.html`)),
     );
     return;
   }
 
-  // Assets with hashed filenames are immutable; cache them after first fetch.
+  // Never store API/JSON responses: they may contain account or booking data.
+  if (request.headers.get("Accept")?.includes("application/json")) return;
+
+  // Cache static app assets only; hashed Vite bundles are immutable.
+  if (!["script", "style", "image", "font"].includes(request.destination)) return;
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
         if (response.ok && response.type === "basic") {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)));
         }
         return response;
       });
