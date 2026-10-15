@@ -1,59 +1,77 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#e4572e" />
-    <meta name="description" content="CineBook is a movie ticket booking app. Browse movies, choose a theatre and show, pick your seats, and get your digital ticket." />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://akilesh-m-k.github.io/Movie-Booking/" />
 
-    <!-- Standard favicons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/Movie-Booking/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/Movie-Booking/favicon-16x16.png" />
-    <link rel="icon" type="image/x-icon" href="/Movie-Booking/favicon.ico" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#991B1B" />
+  <meta name="description"
+    content="CineBook is a movie ticket booking app. Browse movies, choose a theatre and show, pick your seats, and get your digital ticket." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://akilesh-m-k.github.io/Movie-Booking/" />
 
-    <!-- Apple touch icon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/Movie-Booking/apple-touch-icon.png" />
+  <!-- Standard favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/Movie-Booking/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/Movie-Booking/favicon-16x16.png" />
+  <link rel="icon" type="image/x-icon" href="/Movie-Booking/favicon.ico" />
 
-    <!-- Web app manifest -->
-    <link rel="manifest" href="/Movie-Booking/site.webmanifest" />
+  <!-- Apple touch icon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/Movie-Booking/apple-touch-icon.png" />
 
-    <!-- Open Graph / social -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="CineBook" />
-    <meta property="og:title" content="CineBook - Movie Ticket Booking" />
-    <meta property="og:description" content="Browse movies, choose theatres and shows, pick seats and book your tickets." />
-    <meta property="og:url" content="https://akilesh-m-k.github.io/Movie-Booking/" />
-    <meta property="og:image" content="https://akilesh-m-k.github.io/Movie-Booking/android-chrome-512x512.png" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="CineBook - Movie Ticket Booking" />
-    <meta name="twitter:description" content="Browse movies, choose theatres and shows, pick seats and book your tickets." />
-    <meta name="twitter:image" content="https://akilesh-m-k.github.io/Movie-Booking/android-chrome-512x512.png" />
+  <!-- Web app manifest -->
+  <link rel="manifest" href="/Movie-Booking/site.webmanifest" />
 
-    <title>CineBook - Movie Ticket Booking</title>
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="CineBook" />
+  <meta property="og:title" content="CineBook - Movie Ticket Booking" />
+  <meta property="og:description"
+    content="Browse movies, choose theatres and shows, pick seats and book your tickets." />
+  <meta property="og:url" content="https://akilesh-m-k.github.io/Movie-Booking/" />
+  <meta property="og:image" content="https://akilesh-m-k.github.io/Movie-Booking/android-chrome-512x512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="CineBook - Movie Ticket Booking" />
+  <meta name="twitter:description"
+    content="Browse movies, choose theatres and shows, pick seats and book your tickets." />
+  <meta name="twitter:image" content="https://akilesh-m-k.github.io/Movie-Booking/android-chrome-512x512.png" />
 
-    <script>
-      // GitHub Pages serves 404.html for deep links and passes the original
-      // path in ?redirect=. Restore it so the SPA router sees the real URL.
-      (function () {
-        var params = new URLSearchParams(window.location.search);
-        var redirect = params.get("redirect");
-        if (!redirect) return;
-        var base = "/Movie-Booking/";
-        var target = decodeURIComponent(redirect);
-        // Only same-app paths are accepted; anything else falls back to home.
-        if (target.charAt(0) !== "/" || target.indexOf("//") === 0) target = "/";
-        var rest = target;
-        while (rest.charAt(0) === "/") { rest = rest.slice(1); }
-        var clean = target.indexOf(base) === 0 ? target : base + rest;
-        window.history.replaceState(null, "", clean);
-      })();
-    </script>
-  </head>
-  <body>
-    <noscript>CineBook needs JavaScript enabled to browse movies and book tickets.</noscript>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+  <title>CineBook - Movie Ticket Booking</title>
+
+  <!-- Google Fonts: Playfair Display (600, 700) and Plus Jakarta Sans (400, 500, 600, 700) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
+    rel="stylesheet"
+  />
+
+  <script>
+    // GitHub Pages serves 404.html for deep links and passes the original
+    // path in ?redirect=. Restore it so the SPA router sees the real URL.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var redirect = params.get("redirect");
+      if (!redirect) return;
+      var base = "/Movie-Booking/";
+      var target = decodeURIComponent(redirect);
+      // Only same-app paths are accepted; anything else falls back to home.
+      if (target.charAt(0) !== "/" || target.indexOf("//") === 0)
+        target = "/";
+      var rest = target;
+      while (rest.charAt(0) === "/") {
+        rest = rest.slice(1);
+      }
+      var clean = target.indexOf(base) === 0 ? target : base + rest;
+      window.history.replaceState(null, "", clean);
+    })();
+  </script>
+</head>
+
+<body class="bg-canvas text-ink-primary font-sans antialiased selection:bg-brand-light selection:text-brand">
+  <noscript>CineBook needs JavaScript enabled to browse movies and book
+    tickets.</noscript>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

@@ -176,28 +176,28 @@ function Profile() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-150px)] bg-[#f6f8fb] px-5 py-12 lg:px-8">
+    <main className="min-h-[calc(100vh-150px)] bg-canvas px-5 py-12 font-sans text-ink-primary lg:px-8">
       <div className="mx-auto max-w-3xl space-y-8">
 
-        {/* ─── Profile Update Card (DIV, NO form tag, pure onClick) ─── */}
-        <div className="rounded-3xl border border-[#e4e7ec] bg-[#ffffff] p-7 shadow-[0_18px_45px_rgba(82,60,42,0.10)] sm:p-10">
+        {/* ─── Profile Update Card ─── */}
+        <div className="rounded-2xl border border-canvas-muted bg-surface p-7 shadow-cozy sm:p-10">
           {/* Header */}
-          <div className="flex flex-col gap-5 border-b border-[#efe8d5] pb-7 sm:flex-row sm:items-center">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#e4572e] text-3xl font-black text-white shadow-lg">
+          <div className="flex flex-col gap-5 border-b border-canvas-muted pb-7 sm:flex-row sm:items-center">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-brand text-3xl font-bold font-sans text-white shadow-cozy">
               {(user?.name?.[0] || "U").toUpperCase()}
             </div>
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#667085]">My Profile</p>
-              <h1 className="mt-1 text-3xl font-black text-[#14213d]">{user?.name}</h1>
-              <p className="mt-1 text-[#667085]">{user?.email}</p>
+              <p className="font-sans text-xs font-bold uppercase tracking-[0.18em] text-ink-secondary">My Profile</p>
+              <h1 className="mt-1 font-serif text-3xl font-bold tracking-tight text-ink-primary">{user?.name}</h1>
+              <p className="mt-1 font-sans text-sm text-ink-secondary">{user?.email}</p>
             </div>
           </div>
 
-          {/* Profile fields container - using div to eliminate any chance of browser form submission */}
+          {/* Profile fields container */}
           <div className="mt-8 space-y-5">
             <div>
-              <label htmlFor="profileName" className="mb-1 block text-sm font-bold text-[#344054]">
-                Full Name <span className="text-red-500">*</span>
+              <label htmlFor="profileName" className="mb-1 block font-sans text-sm font-medium text-ink-primary">
+                Full Name <span className="text-brand">*</span>
               </label>
               <input
                 id="profileName"
@@ -205,12 +205,12 @@ function Profile() {
                 value={name}
                 onChange={(e) => { setName(e.target.value); setProfileError(""); setProfileMsg(""); }}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleUpdateProfile(e); } }}
-                className="w-full rounded-xl border border-[#d9cfba] bg-[#ffffff] px-4 py-3 text-[#14213d] focus:border-[#e4572e] focus:outline-none focus:ring-2 focus:ring-[#e4572e]/20"
+                className="w-full rounded-xl border border-canvas-muted bg-surface px-4 py-3 font-sans text-ink-primary placeholder:text-ink-tertiary focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
               />
             </div>
 
             <div>
-              <label htmlFor="profileEmail" className="mb-1 block text-sm font-bold text-[#344054]">
+              <label htmlFor="profileEmail" className="mb-1 block font-sans text-sm font-medium text-ink-primary">
                 Email Address
               </label>
               <input
@@ -218,12 +218,12 @@ function Profile() {
                 type="email"
                 value={user?.email || ""}
                 readOnly
-                className="w-full cursor-not-allowed rounded-xl border border-[#d9cfba] bg-[#f5f0e6] px-4 py-3 text-[#667085]"
+                className="w-full cursor-not-allowed rounded-xl border border-canvas-muted bg-canvas/60 px-4 py-3 font-sans text-ink-secondary"
               />
             </div>
 
             <div>
-              <label htmlFor="profilePhone" className="mb-1 block text-sm font-bold text-[#344054]">
+              <label htmlFor="profilePhone" className="mb-1 block font-sans text-sm font-medium text-ink-primary">
                 Phone Number
               </label>
               <input
@@ -234,17 +234,17 @@ function Profile() {
                 onChange={(e) => { setPhone(sanitizePhone(e.target.value)); setProfileError(""); setProfileMsg(""); }}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleUpdateProfile(e); } }}
                 placeholder="10-digit mobile number"
-                className="w-full rounded-xl border border-[#d9cfba] bg-[#ffffff] px-4 py-3 text-[#14213d] focus:border-[#e4572e] focus:outline-none focus:ring-2 focus:ring-[#e4572e]/20"
+                className="w-full rounded-xl border border-canvas-muted bg-surface px-4 py-3 font-sans text-ink-primary placeholder:text-ink-tertiary focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
               />
             </div>
 
             {profileMsg && (
-              <p className="rounded-xl border border-[#b8e0d2] bg-[#e6f5ef] px-4 py-3 text-sm font-bold text-[#147d61]">
+              <p className="rounded-xl border border-brand/20 bg-brand-light px-4 py-3 font-sans text-sm font-semibold text-brand shadow-cozy">
                 ✅ {profileMsg}
               </p>
             )}
             {profileError && (
-              <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+              <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-sans text-sm font-semibold text-red-700">
                 ❌ {profileError}
               </p>
             )}
@@ -254,13 +254,13 @@ function Profile() {
                 type="button"
                 disabled={saving}
                 onClick={handleUpdateProfile}
-                className="rounded-xl bg-[#e4572e] px-6 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#c94423] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl bg-brand px-6 py-3 font-sans text-sm font-semibold text-white shadow-cozy transition hover:bg-brand-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? "Updating…" : "🔄 Update Profile"}
               </button>
               <Link
                 to="/bookings"
-                className="inline-flex items-center justify-center rounded-xl border border-[#d0d5dd] bg-[#fcf7eb] px-5 py-3 text-sm font-black text-[#344054] transition hover:-translate-y-0.5 hover:bg-[#fff1ed]"
+                className="inline-flex items-center justify-center rounded-xl border border-canvas-muted bg-surface px-5 py-3 font-sans text-sm font-semibold text-ink-primary shadow-cozy transition hover:bg-canvas active:scale-[0.99]"
               >
                 My Bookings
               </Link>
@@ -268,14 +268,19 @@ function Profile() {
           </div>
         </div>
 
-        {/* ─── Movie CRUD Card (NO <form> elements — all onClick) ─── */}
-        <div className="rounded-3xl border border-[#e4e7ec] bg-[#ffffff] p-7 shadow-[0_18px_45px_rgba(82,60,42,0.10)] sm:p-10">
-          <div className="border-b border-[#efe8d5] pb-5">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-[#667085]">CRUD Operations</p>
-            <h2 className="mt-1 text-2xl font-black text-[#14213d]">Movie Management</h2>
-            <p className="mt-1 text-sm text-[#667085]">
+        {/* ─── Movie CRUD Card ─── */}
+        <div className="rounded-2xl border border-canvas-muted bg-surface p-7 shadow-cozy sm:p-10">
+          <div className="border-b border-canvas-muted pb-5">
+            <p className="font-sans text-xs font-bold uppercase tracking-[0.18em] text-ink-secondary">CRUD Operations</p>
+            <h2 className="mt-1 font-serif text-2xl font-bold tracking-tight text-ink-primary">Movie Management</h2>
+            <p className="mt-1 font-sans text-sm text-ink-secondary">
               Results are logged in the browser console (F12 → Console tab).
             </p>
+            {user?.role !== "admin" && (
+              <p className="mt-2 rounded-xl border border-amber/30 bg-amber/10 px-3 py-2 font-sans text-xs font-bold text-amber">
+                ⚠️ Add and Delete require <strong>admin</strong> privileges. GET is available to all users.
+              </p>
+            )}
           </div>
 
           {/* Action Buttons row */}
@@ -310,11 +315,10 @@ function Profile() {
 
           {/* Status banner */}
           {crudStatus.text && (
-            <div className={`mt-4 rounded-xl border px-4 py-3 text-sm font-bold ${
-              crudStatus.type === "error"
+            <div className={`mt-4 rounded-xl border px-4 py-3 text-sm font-bold ${crudStatus.type === "error"
                 ? "border-red-200 bg-red-50 text-red-700"
                 : "border-[#b8e0d2] bg-[#e6f5ef] text-[#147d61]"
-            }`}>
+              }`}>
               {crudStatus.text}
             </div>
           )}

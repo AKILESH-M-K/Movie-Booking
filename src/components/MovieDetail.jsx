@@ -7,39 +7,41 @@ function MovieDetail({ movie: movieProp, onBack, onBook }) {
   if (!movie) return null;
 
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-[#f6f8fb] px-5 py-10 lg:px-8 lg:py-14">
+    <main className="min-h-[calc(100vh-80px)] bg-canvas px-5 py-10 font-sans text-ink-primary lg:px-8 lg:py-14">
       <div className="mx-auto max-w-6xl">
         <button
           type="button"
           onClick={onBack}
-          className="mb-8 text-base font-bold text-[#667085] transition hover:-translate-x-1 hover:text-[#e4572e]"
+          className="mb-8 inline-flex items-center gap-1.5 text-base font-medium font-sans text-ink-secondary transition hover:-translate-x-1 hover:text-brand"
         >
           ← Back to Movies
         </button>
 
-        <div className="grid overflow-hidden rounded-3xl border border-[#e6dec8] bg-[#ffffff] shadow-[0_18px_45px_rgba(82,60,42,0.12)] lg:grid-cols-[300px_1fr]">
-          <div className="min-h-[420px] bg-[#eee5d1] lg:min-h-full">
-            <img
-              src={movie.image}
-              alt={movie.title}
-              className="h-full w-full object-cover"
-            />
+        <div className="grid overflow-hidden rounded-2xl border border-canvas-muted bg-surface shadow-cozy lg:grid-cols-[340px_1fr]">
+          <div className="flex items-center justify-center bg-canvas/40 p-6 sm:p-8 lg:p-10">
+            <div className="w-full max-w-[280px] overflow-hidden rounded-xl shadow-poster ring-1 ring-ink-primary/10 bg-canvas-muted">
+              <img
+                src={movie.image}
+                alt={movie.title}
+                className="aspect-[3/4] h-full w-full object-cover"
+              />
+            </div>
           </div>
 
-          <div className="p-7 sm:p-10">
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-[#f6efda] px-3 py-1.5 text-sm font-bold text-[#876034]">
+          <div className="p-7 sm:p-10 lg:p-12">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="rounded-full bg-brand-light px-3.5 py-1.5 text-xs font-semibold text-brand">
                 {movie.genre}
               </span>
-              <span className="rounded-full bg-[#e6f5ef] px-3 py-1.5 text-sm font-bold text-[#147d61]">
+              <span className="rounded-full border border-canvas-muted bg-surface px-3.5 py-1.5 text-xs font-bold text-amber shadow-sm">
                 ⭐ {movie.rating}
               </span>
             </div>
 
-            <h1 className="mt-5 text-4xl font-black tracking-tight text-[#14213d] sm:text-5xl">
+            <h1 className="mt-5 font-serif text-4xl font-bold tracking-tight text-ink-primary sm:text-5xl">
               {movie.title}
             </h1>
-            <p className="mt-4 text-lg leading-8 text-[#6f644e]">
+            <p className="mt-4 font-sans text-base leading-8 text-ink-secondary sm:text-lg">
               {movie.description}
             </p>
 
@@ -53,7 +55,7 @@ function MovieDetail({ movie: movieProp, onBack, onBook }) {
             <button
               type="button"
               onClick={onBook}
-              className="mt-9 w-full rounded-xl bg-[#e4572e] px-6 py-4 text-base font-black text-white shadow-md shadow-[#e4572e]/15 transition-all duration-200 hover:-translate-y-1 hover:bg-[#c94423] hover:shadow-xl hover:shadow-[#e4572e]/20 active:translate-y-0 sm:w-auto"
+              className="mt-9 w-full rounded-xl bg-brand px-7 py-4 text-base font-semibold font-sans text-white shadow-cozy transition-all hover:bg-brand-hover active:scale-[0.99] sm:w-auto"
             >
               Choose Theatre →
             </button>
@@ -66,11 +68,11 @@ function MovieDetail({ movie: movieProp, onBack, onBook }) {
 
 function Info({ label, value }) {
   return (
-    <div className="rounded-xl border border-[#e4e7ec] bg-[#f8fafc] p-4">
-      <p className="text-sm font-bold uppercase tracking-wide text-[#98a2b3]">
+    <div className="rounded-xl border border-canvas-muted bg-canvas/30 p-4">
+      <p className="font-sans text-xs font-bold uppercase tracking-wider text-ink-tertiary">
         {label}
       </p>
-      <p className="mt-1 text-base font-bold leading-6 text-[#344054]">
+      <p className="mt-1 font-sans text-base font-semibold leading-6 text-ink-primary">
         {value}
       </p>
     </div>

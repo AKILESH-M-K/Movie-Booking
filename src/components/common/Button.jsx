@@ -1,8 +1,18 @@
-function Button({ children, type = "button", variant = "primary", disabled = false, onClick, className = "" }) {
+function Button({
+  children,
+  type = "button",
+  variant = "primary",
+  disabled = false,
+  onClick,
+  className = "",
+}) {
   const styles = {
-    primary: "bg-[#e4572e] text-white hover:bg-[#c94423] hover:-translate-y-0.5 hover:shadow-lg",
-    secondary: "border border-[#d0d5dd] bg-[#fcf7eb] text-[#344054] hover:border-[#e4572e] hover:bg-[#fff1ed]",
-    olive: "bg-[#2a9d8f] text-white hover:bg-[#59613f] hover:-translate-y-0.5 hover:shadow-lg",
+    primary:
+      "bg-brand hover:bg-brand-hover text-white font-semibold rounded-xl shadow-cozy transition-all active:scale-[0.99]",
+    secondary:
+      "border border-canvas-muted bg-surface text-ink-primary hover:bg-canvas font-semibold rounded-xl shadow-cozy transition-all active:scale-[0.99]",
+    olive:
+      "border border-brand/20 bg-brand-light text-brand hover:bg-brand/15 font-semibold rounded-xl shadow-cozy transition-all active:scale-[0.99]",
   };
 
   return (
@@ -10,7 +20,7 @@ function Button({ children, type = "button", variant = "primary", disabled = fal
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className={`rounded-xl px-5 py-3.5 text-base font-black transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 ${styles[variant]} ${className}`}
+      className={`px-5 py-3.5 text-base font-sans transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 ${styles[variant] || styles.primary} ${className}`}
     >
       {children}
     </button>

@@ -9,24 +9,24 @@ function Header() {
   const { clearBooking } = useBooking();
 
   const navClass = ({ isActive }) =>
-    `text-base font-bold transition-all hover:-translate-y-0.5 ${
-      isActive ? "text-[#e4572e]" : "text-[#776a54] hover:text-[#e4572e]"
+    `font-sans text-sm font-medium transition-all hover:-translate-y-0.5 ${
+      isActive ? "text-brand font-semibold" : "text-ink-secondary hover:text-brand"
     }`;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#e5dcc5]/80 bg-[#ffffff]/95 shadow-sm backdrop-blur-xl">
-      <div className="mx-auto flex h-19 max-w-7xl items-center justify-between px-5 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-canvas-muted bg-surface/95 shadow-cozy backdrop-blur-xl">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
         {/* Brand / Logo */}
         <NavLink to="/home" className="group flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e4572e] text-xl shadow-md shadow-[#e4572e]/20 transition-transform duration-200 group-hover:-rotate-3 group-hover:scale-105">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand text-xl text-white shadow-cozy transition-transform duration-200 group-hover:-rotate-3 group-hover:scale-105">
             🎬
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-wide text-[#14213d]">
+            <h1 className="font-serif text-xl font-bold tracking-tight text-ink-primary">
               CINEBOOK
             </h1>
-            <p className="hidden text-xs font-bold uppercase tracking-[0.22em] text-[#9d8d6f] sm:block">
-              Movie Booking
+            <p className="hidden font-sans text-[10px] font-bold uppercase tracking-[0.22em] text-ink-tertiary sm:block">
+              Cinema Lounge
             </p>
           </div>
         </NavLink>
@@ -46,32 +46,29 @@ function Header() {
 
         {/* Right Section: Install Button + User Info / Auth */}
         <div className="flex items-center gap-3">
-          {/* PWA Install Button Component */}
           <InstallPWA />
 
           {isAuthenticated ? (
             <>
               <NavLink
                 to="/profile"
-                className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-[#fff1ed]"
+                className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 transition hover:bg-canvas"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e4572e] text-sm font-black text-white">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-xs font-bold text-white shadow-sm font-sans">
                   {(user.name?.[0] || "U").toUpperCase()}
                 </span>
-                <span className="hidden text-sm font-bold text-[#776a54] sm:block">
+                <span className="hidden font-sans text-sm font-medium text-ink-secondary sm:block">
                   Hi, {user.name}
                 </span>
               </NavLink>
               <button
                 type="button"
                 onClick={() => {
-                  // Clear the in-progress booking and the session together so
-                  // nothing from the previous user remains visible.
                   clearBooking();
                   logout();
                   navigate("/", { replace: true });
                 }}
-                className="rounded-xl border border-[#d0d5dd] bg-[#fcf7eb] px-4 py-2.5 text-sm font-black text-[#344054] transition-all hover:-translate-y-0.5 hover:border-[#e4572e] hover:bg-[#fff1ed] hover:text-[#c94423]"
+                className="rounded-xl border border-canvas-muted bg-surface px-4 py-2 font-sans text-xs font-semibold text-ink-primary shadow-cozy transition-all hover:bg-canvas hover:text-brand active:scale-[0.99]"
               >
                 Logout
               </button>
@@ -79,7 +76,7 @@ function Header() {
           ) : (
             <NavLink
               to="/login"
-              className="rounded-xl border border-[#d0d5dd] bg-[#fcf7eb] px-4 py-2.5 text-sm font-black text-[#344054] transition-all hover:-translate-y-0.5 hover:border-[#e4572e] hover:bg-[#fff1ed] hover:text-[#c94423]"
+              className="rounded-xl border border-canvas-muted bg-surface px-4 py-2 font-sans text-xs font-semibold text-ink-primary shadow-cozy transition-all hover:bg-canvas hover:text-brand active:scale-[0.99]"
             >
               Sign In
             </NavLink>

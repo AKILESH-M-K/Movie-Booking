@@ -80,15 +80,15 @@ function Signup() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f6f8fb] px-5 py-12 lg:px-8">
-      <div className="w-full max-w-lg rounded-3xl border border-[#e4e7ec] bg-[#ffffff] p-7 shadow-[0_18px_45px_rgba(82,60,42,0.12)] sm:p-9">
-        <p className="text-sm font-black uppercase tracking-[0.2em] text-[#667085]">
+    <main className="flex min-h-screen items-center justify-center bg-canvas px-5 py-12 font-sans text-ink-primary lg:px-8">
+      <div className="w-full max-w-lg rounded-2xl border border-canvas-muted bg-surface p-7 shadow-cozy sm:p-9">
+        <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-ink-secondary">
           CineBook Account
         </p>
-        <h1 className="mt-2 text-3xl font-black text-[#14213d]">
+        <h1 className="mt-2 font-serif text-3xl font-bold tracking-tight text-ink-primary">
           Create your profile
         </h1>
-        <p className="mt-3 text-base leading-7 text-[#667085]">
+        <p className="mt-3 font-sans text-base leading-7 text-ink-secondary">
           Your account is created first. You will then sign in to start booking.
         </p>
 
@@ -148,11 +148,11 @@ function Signup() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-[#83755f]">
+        <p className="mt-6 text-center font-sans text-sm text-ink-secondary">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-black text-[#e4572e] hover:text-[#c94423]"
+            className="font-semibold text-brand hover:text-brand-hover"
           >
             Sign in
           </Link>

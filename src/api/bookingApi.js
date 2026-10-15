@@ -25,9 +25,13 @@ export async function getBookingById(id) {
 // ----------------------------------------------------
 // 2. POST (Create new booking)
 // ----------------------------------------------------
-export async function createBooking(booking) {
+export async function createBooking(booking, idempotencyKey) {
   console.log("📤 [CRUD POST /bookings] Creating new booking ticket:", booking);
-  const { data } = await apiClient.post("/bookings", booking);
+  const headers = {};
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
+  const { data } = await apiClient.post("/bookings", booking, { headers });
   console.log("✅ [CRUD POST /bookings] Ticket successfully created:", data);
   return data;
 }

@@ -423,38 +423,118 @@
   ],
   "users": [
     {
-      "id": "4873f700-9493-4f0c-851f-402f086d01e9",
-      "name": "aki",
-      "email": "aki@gmail.com",
-      "phone": "9564687325",
-      "passwordHash": "$2b$12$nJPgxKh6DMiaWt9mlsL93.EDRc0ESrc.IdoFhgqP6iiqVD87toe2m",
-      "createdAt": "2026-10-09T09:29:33.355Z"
+      "id": "admin-cinebook-seed-001",
+      "name": "CineBook Admin",
+      "email": "admin@cinebook.com",
+      "phone": "9876543210",
+      "role": "admin",
+      "passwordHash": "$2b$10$1bu5wsg7Y.duQ5MAo.nOBu17.OwDQraJdMVLworGJwKah//Dnf3Em",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "customer-cinebook-seed-002",
+      "name": "Demo Customer",
+      "email": "demo@cinebook.com",
+      "phone": "9876543211",
+      "role": "customer",
+      "passwordHash": "$2b$10$P./lby.2MNDEoGabLbqjl.KRQ60hLVbGVQtiexSH1g/O/UKWNi1VG",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "26c84b9b-9585-4437-9bea-b692743bdb18",
+      "name": "akilesh",
+      "email": "akil@gmail.com",
+      "phone": "9854232157",
+      "role": "customer",
+      "passwordHash": "$2b$12$vDUifx10WIZOoRQhCh7Vium2UF23.vfO4gUdFJnMLtSrnb0cL5lmO",
+      "createdAt": "2026-10-11T02:56:52.715Z",
+      "updatedAt": "2026-10-12T02:02:30.849Z"
+    },
+    {
+      "id": "ba993499-a956-45ea-8a7c-d94dd55345ea",
+      "name": "madhu",
+      "email": "madhukalai1202@gmail.com",
+      "phone": "6369441041",
+      "role": "customer",
+      "passwordHash": "$2b$12$dCLDdItTGJ8YIG/5HbzqMe3gy3jD.lNEfhQ04B.aqNoBfr9FUe1ea",
+      "createdAt": "2026-10-15T07:52:11.738Z"
     }
   ],
   "bookings": [
     {
-      "bookingId": "CB24E46951F9A8",
-      "userId": "4873f700-9493-4f0c-851f-402f086d01e9",
-      "movieId": 126,
-      "movie": "RRR",
-      "theatre": "Fun Republic",
-      "show": "10:30 PM",
+      "bookingId": "CB7DC641CE60A8",
+      "userId": "customer-cinebook-seed-002",
+      "movieId": 102,
+      "movie": "Inception",
+      "theatre": "PVR INOX",
+      "show": "07:30 PM",
       "seats": [
-        "E4",
-        "E5"
+        "E9",
+        "E8"
       ],
       "customer": {
-        "name": "aki",
-        "email": "aki@gmail.com",
-        "phone": "9564687325"
+        "name": "Demo Customer",
+        "email": "demo@cinebook.com",
+        "phone": "9876543211"
       },
-      "amount": 530,
-      "paymentMethod": "Pay at Theatre",
-      "bookedAt": "2026-10-09T18:07:23.903Z",
+      "amount": 590,
+      "paymentMethod": "UPI",
+      "bookedAt": "2026-10-10T12:00:00.000Z",
       "status": "paid",
-      "paymentReference": "DEMO-A906EF5342",
-      "paidAt": "2026-10-09T18:07:23.998Z"
+      "paymentReference": "DEMO-53157884A3",
+      "paidAt": "2026-10-10T12:01:00.000Z"
     }
   ],
-  "shows": []
+  "shows": [
+    {
+      "id": 1,
+      "theatreId": 1,
+      "theatreName": "PVR INOX",
+      "screen": "Screen 1",
+      "time": "10:00 AM",
+      "format": "2D",
+      "language": "English",
+      "priceMultiplier": 1
+    },
+    {
+      "id": 2,
+      "theatreId": 1,
+      "theatreName": "PVR INOX",
+      "screen": "Screen 2",
+      "time": "01:30 PM",
+      "format": "2D",
+      "language": "English",
+      "priceMultiplier": 1
+    },
+    {
+      "id": 3,
+      "theatreId": 1,
+      "theatreName": "PVR INOX",
+      "screen": "Screen 1",
+      "time": "04:30 PM",
+      "format": "2D",
+      "language": "English",
+      "priceMultiplier": 1
+    },
+    {
+      "id": 4,
+      "theatreId": 1,
+      "theatreName": "PVR INOX",
+      "screen": "IMAX Screen",
+      "time": "07:30 PM",
+      "format": "IMAX",
+      "language": "English",
+      "priceMultiplier": 1.25
+    },
+    {
+      "id": 5,
+      "theatreId": 1,
+      "theatreName": "PVR INOX",
+      "screen": "Screen 3",
+      "time": "10:30 PM",
+      "format": "2D",
+      "language": "English",
+      "priceMultiplier": 1
+    }
+  ]
 }

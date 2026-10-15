@@ -1,10 +1,6 @@
-export function resolveApiConfig({
-  isDev,
-  isProd,
-  configuredUrl,
-  pageOrigin,
-}) {
-  const configured = typeof configuredUrl === "string" ? configuredUrl.trim() : "";
+export function resolveApiConfig({ isDev, isProd, configuredUrl, pageOrigin }) {
+  const configured =
+    typeof configuredUrl === "string" ? configuredUrl.trim() : "";
 
   if (!configured) {
     return {

@@ -22,27 +22,26 @@ function Home({ onSelectMovie }) {
   };
 
   return (
-    <main id="home" className="bg-[#f6f8fb]">
-      <section className="relative overflow-hidden border-b border-[#e4e7ec] bg-[#eef2f7]">
-        <div className="absolute -left-24 top-8 h-72 w-72 rounded-full bg-[#e4572e]/10 blur-3xl" />
-        <div className="absolute -right-24 top-16 h-72 w-72 rounded-full bg-[#2a9d8f]/10 blur-3xl" />
+    <main id="home" className="bg-canvas text-ink-primary font-sans">
+      <section className="relative overflow-hidden border-b border-canvas-muted bg-surface/60">
+        <div className="absolute -left-24 top-8 h-72 w-72 rounded-full bg-brand/5 blur-3xl pointer-events-none" />
+        <div className="absolute -right-24 top-16 h-72 w-72 rounded-full bg-amber/5 blur-3xl pointer-events-none" />
 
         <div className="relative mx-auto max-w-7xl px-5 pb-14 pt-16 text-center lg:px-8 lg:pb-20 lg:pt-24">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#f08a70]/40 bg-[#ffffff]/70 px-4 py-2 text-sm font-bold tracking-wide text-[#9b5d28] shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-[#e4572e]" />
-            MOVIE TICKETS, MADE SIMPLE
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-light/70 px-4 py-1.5 text-xs font-semibold tracking-wider text-brand shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+            BOUTIQUE CINEMA LOUNGE
           </div>
 
-          <h2 className="mx-auto max-w-4xl text-4xl font-black uppercase tracking-tight text-[#14213d] sm:text-6xl lg:text-7xl">
+          <h2 className="mx-auto max-w-4xl font-serif text-4xl font-bold uppercase tracking-tight text-ink-primary sm:text-6xl lg:text-7xl">
             Your next movie night
-            <span className="font-script mt-1 block text-6xl font-normal normal-case tracking-normal text-[#e4572e] sm:text-7xl lg:text-8xl">
+            <span className="font-script mt-1 block text-6xl font-normal normal-case tracking-normal text-brand sm:text-7xl lg:text-8xl">
               starts here.
             </span>
           </h2>
 
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-[#667085] sm:text-lg">
-            Discover movies, explore theatres, choose your seats, and complete
-            your booking in a simple and comfortable flow.
+          <p className="mx-auto mt-6 max-w-2xl font-sans text-base leading-8 text-ink-secondary sm:text-lg">
+            Discover curated films, reserve premier theatre seats, and immerse yourself in an editorial boutique cinema experience.
           </p>
 
           <div className="mx-auto mt-9 max-w-3xl">
@@ -61,13 +60,13 @@ function Home({ onSelectMovie }) {
       >
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#667085]">
+            <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-ink-secondary">
               Browse collection
             </p>
-            <h2 className="mt-2 text-3xl font-black text-[#14213d] sm:text-4xl">
+            <h2 className="mt-2 font-serif text-3xl font-bold tracking-tight text-ink-primary sm:text-4xl">
               Now Showing
             </h2>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-[#667085]">
+            <p className="mt-3 max-w-2xl font-sans text-base leading-7 text-ink-secondary">
               Search by title, language, genre, or cast and choose a movie to
               begin booking.
             </p>
@@ -79,10 +78,10 @@ function Home({ onSelectMovie }) {
                 key={genre}
                 type="button"
                 onClick={() => filterByGenre(genre)}
-                className={`rounded-full border px-4 py-2.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 ${
+                className={`rounded-full border px-4 py-2 font-sans text-xs font-semibold transition-all duration-200 active:scale-95 ${
                   selectedGenre === genre
-                    ? "border-[#e4572e] bg-[#e4572e] text-white shadow-md shadow-[#e4572e]/20"
-                    : "border-[#e4e7ec] bg-[#ffffff] text-[#6f6550] hover:border-[#e4572e] hover:bg-[#fff7f4] hover:text-[#c94423]"
+                    ? "border-brand bg-brand text-white shadow-cozy"
+                    : "border-canvas-muted bg-surface text-ink-secondary hover:border-brand/40 hover:bg-white hover:text-brand"
                 }`}
               >
                 {genre}

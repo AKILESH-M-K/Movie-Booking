@@ -270,7 +270,7 @@ export default function InstallPWA() {
           ref={triggerRef}
           type="button"
           onClick={handleInstallClick}
-          className="rounded-xl border border-[#d0d5dd] bg-[#fcf7eb] px-4 py-2.5 text-sm font-black text-[#344054] transition-all hover:-translate-y-0.5 hover:border-[#e4572e] hover:bg-[#fff1ed]"
+          className="rounded-xl border border-canvas-muted bg-surface px-4 py-2 font-sans text-xs font-semibold text-ink-primary shadow-cozy transition-all hover:bg-canvas hover:text-brand active:scale-[0.99]"
           title={deferredPrompt ? "Install CineBook" : "Install CineBook or view browser-specific instructions"}
         >
           {deferredPrompt ? "Install App" : "Install / Open"}
@@ -279,45 +279,45 @@ export default function InstallPWA() {
 
       {showHelp && createPortal(
         <div
-          className="fixed inset-0 z-[1000] grid place-items-center overflow-y-auto bg-black/50 p-4 sm:p-6"
+          className="fixed inset-0 z-[1000] grid place-items-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-6"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setShowHelp(false);
           }}
         >
           <section
             ref={dialogRef}
-            className="my-auto max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-3xl border border-[#e4e7ec] bg-[#ffffff] p-6 shadow-2xl sm:p-7"
+            className="my-auto max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto overscroll-contain bg-surface rounded-2xl shadow-cozy border border-canvas-muted p-6 sm:p-7"
             role="dialog"
             aria-modal="true"
             aria-labelledby="pwa-help-title"
             aria-describedby="pwa-help-description"
           >
-            <h2 id="pwa-help-title" className="text-2xl font-black text-[#14213d]">
+            <h2 id="pwa-help-title" className="font-serif text-2xl font-bold tracking-tight text-ink-primary">
               Install CineBook
             </h2>
-            <p id="pwa-help-description" className="mt-3 text-base leading-7 text-[#667085]">
+            <p id="pwa-help-description" className="mt-3 font-sans text-base leading-7 text-ink-secondary">
               {deferredPrompt
                 ? "Your browser can open its native install prompt. Choose Install there to add CineBook to your device."
                 : `No automatic install prompt is available in ${guide.browser}. Try these steps:`}
             </p>
 
             {installError && (
-              <p role="alert" className="mt-3 rounded-xl border border-[#f7c8bb] bg-[#fff7f4] px-4 py-3 text-sm font-bold text-[#9f5525]">
+              <p role="alert" className="mt-3 rounded-xl border border-brand/20 bg-brand-light px-4 py-3 font-sans text-sm font-semibold text-brand">
                 {installError}
               </p>
             )}
 
-            <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-6 text-[#667085]">
+            <ol className="mt-4 list-decimal space-y-2 pl-5 font-sans text-sm leading-6 text-ink-secondary">
               {guide.steps.map((step) => <li key={step}>{step}</li>)}
             </ol>
-            <p className="mt-4 text-sm leading-6 text-[#667085]">{guide.note}</p>
-            <p className="mt-3 text-xs leading-5 text-[#667085]">
+            <p className="mt-4 font-sans text-sm leading-6 text-ink-secondary">{guide.note}</p>
+            <p className="mt-3 font-sans text-xs leading-5 text-ink-tertiary">
               A website cannot silently download or install an app. The browser or operating system must show the install controls and you must confirm.
             </p>
 
             <a
               href={APP_START_URL}
-              className="mt-5 inline-flex w-full items-center justify-center rounded-xl border border-[#d0d5dd] bg-[#fcf7eb] px-5 py-3 text-sm font-black text-[#344054] hover:border-[#e4572e] hover:bg-[#fff1ed]"
+              className="mt-5 inline-flex w-full items-center justify-center rounded-xl border border-canvas-muted bg-canvas/40 px-5 py-3 font-sans text-sm font-semibold text-ink-primary hover:bg-canvas"
             >
               Open CineBook
             </a>
@@ -325,7 +325,7 @@ export default function InstallPWA() {
               ref={closeRef}
               type="button"
               onClick={() => setShowHelp(false)}
-              className="mt-3 w-full rounded-xl bg-[#e4572e] px-5 py-3.5 text-base font-black text-white hover:bg-[#c94423] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14213d]"
+              className="mt-3 w-full bg-brand hover:bg-brand-hover text-white font-semibold rounded-xl shadow-cozy transition-all active:scale-[0.99] px-5 py-3.5 font-sans text-base"
             >
               Close
             </button>

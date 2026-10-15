@@ -26,21 +26,21 @@ const features = [
 
 function Landing() {
   return (
-    <main className="min-h-screen bg-[#f6f8fb] text-[#14213d]">
-      <section className="relative overflow-hidden bg-[#eef2f7]">
-        <div className="absolute -left-24 top-10 h-80 w-80 rounded-full bg-[#e4572e]/10 blur-3xl" />
-        <div className="absolute -right-24 top-20 h-80 w-80 rounded-full bg-[#2a9d8f]/10 blur-3xl" />
+    <main className="min-h-screen bg-canvas text-ink-primary font-sans">
+      <section className="relative overflow-hidden border-b border-canvas-muted bg-surface/60">
+        <div className="absolute -left-24 top-10 h-80 w-80 rounded-full bg-brand/5 blur-3xl pointer-events-none" />
+        <div className="absolute -right-24 top-20 h-80 w-80 rounded-full bg-amber/5 blur-3xl pointer-events-none" />
 
         <div className="relative mx-auto max-w-7xl px-5 pb-20 pt-10 lg:px-8 lg:pb-28 lg:pt-16">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e4572e] text-2xl shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-2xl text-white shadow-cozy">
                 🎬
               </div>
               <div>
-                <p className="text-xl font-black tracking-wide">CINEBOOK</p>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d8d6f]">
-                  Movie Booking
+                <p className="font-serif text-xl font-bold tracking-tight text-ink-primary">CINEBOOK</p>
+                <p className="font-sans text-[10px] font-bold uppercase tracking-[0.2em] text-ink-tertiary">
+                  Cinema Lounge
                 </p>
               </div>
             </div>
@@ -48,7 +48,7 @@ function Landing() {
               <InstallPWA />
               <Link
                 to="/login"
-                className="rounded-xl border border-[#d0d5dd] bg-[#ffffff] px-5 py-3 text-sm font-black text-[#344054] transition hover:-translate-y-0.5 hover:border-[#e4572e] hover:bg-[#fff1ed]"
+                className="rounded-xl border border-canvas-muted bg-surface px-5 py-2.5 font-sans text-sm font-semibold text-ink-primary shadow-cozy transition hover:bg-canvas hover:text-brand active:scale-[0.99]"
               >
                 Sign In
               </Link>
@@ -56,30 +56,30 @@ function Landing() {
           </div>
 
           <div className="mx-auto mt-20 max-w-4xl text-center lg:mt-24">
-            <span className="inline-flex rounded-full border border-[#f08a70]/40 bg-[#ffffff]/80 px-4 py-2 text-sm font-black tracking-wide text-[#9b5d28] shadow-sm">
+            <span className="inline-flex rounded-full border border-brand/20 bg-brand-light/70 px-4 py-1.5 font-sans text-xs font-semibold tracking-wider text-brand shadow-sm">
               YOUR COMPLETE MOVIE NIGHT, IN ONE PLACE
             </span>
-            <h1 className="mt-7 text-5xl font-black uppercase tracking-tight sm:text-7xl">
+            <h1 className="mt-7 font-serif text-5xl font-bold uppercase tracking-tight text-ink-primary sm:text-7xl">
               Discover. Choose.
-              <span className="font-script ml-2 inline-block text-6xl font-normal normal-case tracking-normal text-[#e4572e] sm:text-8xl">
+              <span className="font-script ml-3 inline-block text-6xl font-normal normal-case tracking-normal text-brand sm:text-8xl">
                 Book.
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-[#667085] sm:text-xl">
+            <p className="mx-auto mt-6 max-w-3xl font-sans text-lg leading-8 text-ink-secondary sm:text-xl">
               CineBook brings movie discovery, theatre availability, show
               timings, seat selection, secure checkout and digital tickets into
-              one simple booking flow.
+              one warm, boutique cinema experience.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 to="/login"
-                className="rounded-xl bg-[#e4572e] px-7 py-4 text-base font-black text-white shadow-lg shadow-[#e4572e]/20 transition hover:-translate-y-1 hover:bg-[#c94423]"
+                className="rounded-xl bg-brand px-7 py-4 font-sans text-base font-semibold text-white shadow-cozy transition hover:bg-brand-hover active:scale-[0.99]"
               >
                 Login to Start Booking →
               </Link>
               <Link
                 to="/signup"
-                className="rounded-xl border border-[#d0d5dd] bg-[#ffffff] px-7 py-4 text-base font-black text-[#344054] transition hover:-translate-y-1 hover:border-[#e4572e]"
+                className="rounded-xl border border-canvas-muted bg-surface px-7 py-4 font-sans text-base font-semibold text-ink-primary shadow-cozy transition hover:bg-canvas active:scale-[0.99]"
               >
                 Create Account
               </Link>
@@ -90,10 +90,10 @@ function Landing() {
 
       <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
         <div className="text-center">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-[#667085]">
+          <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-ink-secondary">
             Everything in one flow
           </p>
-          <h2 className="mt-2 text-3xl font-black sm:text-4xl">
+          <h2 className="mt-2 font-serif text-3xl font-bold tracking-tight text-ink-primary sm:text-4xl">
             What CineBook gives you
           </h2>
         </div>
@@ -102,13 +102,13 @@ function Landing() {
           {features.map(([icon, title, description]) => (
             <article
               key={title}
-              className="rounded-3xl border border-[#e4e7ec] bg-[#ffffff] p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+              className="rounded-2xl border border-canvas-muted bg-surface p-6 shadow-cozy transition hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff1ed] text-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-canvas-muted bg-canvas text-2xl shadow-sm">
                 {icon}
               </div>
-              <h3 className="mt-5 text-xl font-black">{title}</h3>
-              <p className="mt-3 text-base leading-7 text-[#667085]">
+              <h3 className="mt-5 font-serif text-xl font-bold text-ink-primary">{title}</h3>
+              <p className="mt-3 font-sans text-base leading-7 text-ink-secondary">
                 {description}
               </p>
             </article>
@@ -116,16 +116,16 @@ function Landing() {
         </div>
       </section>
 
-      <section className="border-y border-[#e4e7ec] bg-[#ffffff]">
+      <section className="border-y border-canvas-muted bg-surface">
         <div className="mx-auto max-w-5xl px-5 py-14 text-center lg:px-8">
-          <h2 className="text-3xl font-black">Ready for your next show?</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-[#667085]">
+          <h2 className="font-serif text-3xl font-bold tracking-tight text-ink-primary">Ready for your next show?</h2>
+          <p className="mx-auto mt-3 max-w-2xl font-sans text-base leading-7 text-ink-secondary">
             Sign in first. Then explore movies, choose an available theatre and
             show, pick open seats and receive your digital ticket.
           </p>
           <Link
             to="/login"
-            className="mt-7 inline-flex rounded-xl bg-[#e4572e] px-7 py-4 text-base font-black text-white transition hover:-translate-y-1 hover:bg-[#c94423]"
+            className="mt-7 inline-flex rounded-xl bg-brand px-7 py-4 font-sans text-base font-semibold text-white shadow-cozy transition hover:bg-brand-hover active:scale-[0.99]"
           >
             Enter CineBook →
           </Link>

@@ -32,6 +32,28 @@ export function getBookingById(email, id) {
   return found;
 }
 
+export function findAnyBookingById(id) {
+  if (!id) return null;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(HISTORY_KEY_PREFIX)) {
+        const value = localStorage.getItem(key);
+        const parsed = value ? JSON.parse(value) : [];
+        if (Array.isArray(parsed)) {
+          const found = parsed.find(
+            (b) => String(b.bookingId).toLowerCase() === String(id).toLowerCase(),
+          );
+          if (found) return found;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("findAnyBookingById error:", err);
+  }
+  return null;
+}
+
 // ----------------------------------------------------
 // 2. POST (Create / Save)
 // ----------------------------------------------------

@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies and build
 node_modules
 dist
 dist-ssr
@@ -23,8 +24,19 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local API secrets
+# Environment and sensitive secrets
+.env
+.env.*
+!.env.example
 server/.env
+server/.env.*
+!server/.env.example
+
+# Local SQLite / Database backups
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
 
 # Jest test artifacts
 coverage/

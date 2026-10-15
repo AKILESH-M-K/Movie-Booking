@@ -12,6 +12,6 @@ module.exports = {
     "src/components/Payment.jsx",
     "src/hooks/useMovies.js",
     "src/hooks/useBooking.js",
-    "!src/**/*.test.*"
-  ]
+    "!src/**/*.test.*",
+  ],
 };

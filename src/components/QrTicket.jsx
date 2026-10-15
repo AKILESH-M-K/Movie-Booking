@@ -5,42 +5,58 @@ function QrTicket({ booking }) {
   const [src, setSrc] = useState("");
   const [error, setError] = useState("");
 
-  const ticketUrl = useMemo(() => {
-    const url = new URL(`${window.location.origin}/Movie-Booking/ticket/${encodeURIComponent(booking.bookingId)}`);
-    const values = {
-      id: booking.bookingId,
-      movie: booking.movie,
-      theatre: booking.theatre,
-      show: booking.show,
-      seats: booking.seats?.join(", "),
-      amount: booking.amount,
-      ref: booking.paymentReference || booking.bookingId,
-      status: booking.status,
-    };
-    Object.entries(values).forEach(([key, value]) => url.searchParams.set(key, String(value ?? "")));
-    return url.toString();
-  }, [booking]);
+  // The QR intentionally contains ticket data, not a URL, so scanning it does
+  // not redirect guests to the booking website. This is a demo admission pass.
+  const ticketPayload = useMemo(
+    () =>
+      JSON.stringify({
+        type: "CineBook-Demo-Ticket",
+        bookingId: booking.bookingId,
+        movie: booking.movie,
+        theatre: booking.theatre,
+        show: booking.show,
+        seats: booking.seats,
+        status: booking.status,
+      }),
+    [booking],
+  );
 
   useEffect(() => {
     let active = true;
-    QRCode.toDataURL(ticketUrl, {
+    QRCode.toDataURL(ticketPayload, {
       errorCorrectionLevel: "M",
       margin: 2,
       width: 220,
-      color: { dark: "#14213d", light: "#ffffff" },
+      color: { dark: "#1A1715", light: "#FFF7FB" },
     })
-      .then((dataUrl) => { if (active) setSrc(dataUrl); })
-      .catch(() => { if (active) setError("QR code could not be generated."); });
-    return () => { active = false; };
-  }, [ticketUrl]);
+      .then((dataUrl) => {
+        if (active) setSrc(dataUrl);
+      })
+      .catch(() => {
+        if (active) setError("QR code could not be generated.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [ticketPayload]);
 
   return (
     <div className="ticket-qr-wrap">
-      <div className="ticket-qr-frame" aria-label="Scannable ticket QR code">
-        {src ? <img src={src} alt="Scan to open the verified CineBook ticket" /> : <span aria-live="polite">{error || "Generating…"}</span>}
+      <div className="ticket-qr-frame" title="Scannable demo ticket details">
+        {src ? (
+          <img src={src} alt={`Scannable ticket details for ${booking.movie}`} />
+        ) : (
+          <span aria-live="polite" className="font-sans text-xs text-ink-tertiary">
+            {error || "Generating ticket QR…"}
+          </span>
+        )}
       </div>
-      <p className="ticket-qr-caption">Scan to open verified ticket</p>
-      <p className="ticket-qr-ref">{booking.paymentReference || booking.bookingId}</p>
+      <p className="ticket-qr-caption font-sans text-xs font-medium text-ink-secondary">
+        Scan to read ticket details · no website link
+      </p>
+      <p className="ticket-qr-ref font-mono text-[11px] font-bold text-ink-tertiary">
+        {booking.paymentReference || booking.bookingId}
+      </p>
     </div>
   );
 }

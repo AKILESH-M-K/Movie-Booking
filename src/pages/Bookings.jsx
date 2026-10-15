@@ -15,6 +15,20 @@ import {
 import { API_ENABLED, apiError } from "../api/apiClient";
 import QrTicket from "../components/QrTicket";
 
+function mergeBookings(serverBookings, localBookings) {
+  const fingerprint = (booking) =>
+    [booking.movieId || booking.movie, booking.theatre, booking.show, (booking.seats || []).slice().sort().join(",")]
+      .map((value) => String(value || "").trim().toLowerCase())
+      .join("|");
+  const merged = [...(serverBookings || [])];
+  for (const booking of localBookings || []) {
+    if (!merged.some((item) => item.bookingId === booking.bookingId || fingerprint(item) === fingerprint(booking))) {
+      merged.push(booking);
+    }
+  }
+  return merged.sort((a, b) => (b.bookedAt || "").localeCompare(a.bookedAt || ""));
+}
+
 function formatDateTime(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
@@ -35,13 +49,16 @@ function Bookings() {
     setError("");
     try {
       if (API_ENABLED) {
-        setBookings(await fetchBookingHistory());
+        migrateLegacyBooking(user?.email);
+        setBookings(mergeBookings(await fetchBookingHistory(), getBookings(user?.email)));
       } else {
         migrateLegacyBooking(user?.email);
         setBookings(getBookings(user?.email));
       }
     } catch (err) {
       setError(apiError(err, "Could not load booking history."));
+      migrateLegacyBooking(user?.email);
+      setBookings(getBookings(user?.email));
     } finally {
       setLoading(false);
     }
@@ -52,7 +69,7 @@ function Bookings() {
     async function init() {
       try {
         if (API_ENABLED) {
-          const list = await fetchBookingHistory();
+          const list = mergeBookings(await fetchBookingHistory(), getBookings(user?.email));
           if (!ignore) {
             setBookings(list);
             setLoading(false);
@@ -67,6 +84,8 @@ function Bookings() {
       } catch (err) {
         if (!ignore) {
           setError(apiError(err, "Could not load booking history."));
+          migrateLegacyBooking(user?.email);
+          setBookings(getBookings(user?.email));
           setLoading(false);
         }
       }
@@ -97,7 +116,7 @@ function Bookings() {
     setError("");
     setNotice("");
     try {
-      if (API_ENABLED) {
+      if (API_ENABLED && booking.source !== "demo-local") {
         await updateBooking(booking.bookingId, { name, email, phone }, "PATCH");
         await loadBookings();
       } else {
@@ -120,7 +139,7 @@ function Bookings() {
     setError("");
     setNotice("");
     try {
-      if (API_ENABLED) {
+      if (API_ENABLED && booking.source !== "demo-local") {
         await cancelBooking(booking.bookingId);
         await loadBookings();
       } else {
@@ -136,20 +155,22 @@ function Bookings() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-150px)] bg-[#f6f8fb] px-5 py-12 lg:px-8">
+    <main className="min-h-[calc(100vh-150px)] bg-canvas px-5 py-12 font-sans text-ink-primary lg:px-8">
       <div className="mx-auto max-w-5xl">
-        <p className="text-sm font-black uppercase tracking-[0.2em] text-[#667085]">
+        <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-ink-secondary">
           Your tickets
         </p>
-        <h1 className="mt-2 text-4xl font-black text-[#14213d]">My Bookings</h1>
-        <p className="mt-3 text-lg leading-8 text-[#667085]">
+        <h1 className="mt-2 font-serif text-4xl font-bold tracking-tight text-ink-primary">
+          My Bookings
+        </h1>
+        <p className="mt-3 font-sans text-base leading-7 text-ink-secondary">
           View, update customer details, or cancel your bookings.
         </p>
 
         {notice && (
           <p
             role="status"
-            className="mt-5 rounded-xl border border-[#b8e0d2] bg-[#e6f5ef] px-4 py-3 text-sm font-bold text-[#147d61]"
+            className="mt-5 rounded-xl border border-brand/20 bg-brand-light px-4 py-3 font-sans text-sm font-semibold text-brand shadow-cozy"
           >
             {notice}
           </p>
@@ -157,10 +178,10 @@ function Bookings() {
         {error && (
           <div
             role="alert"
-            className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800"
+            className="mt-5 rounded-xl border border-brand/20 bg-brand-light p-4 font-sans text-sm font-semibold text-brand"
           >
             {error}
-            <button className="ml-3 underline" onClick={loadBookings}>
+            <button className="ml-3 underline font-bold" onClick={loadBookings}>
               Retry
             </button>
           </div>
@@ -169,30 +190,30 @@ function Bookings() {
           <div className="ticket-success" role="status">
             <span className="ticket-success-icon" aria-hidden="true">✓</span>
             <div>
-              <strong>Payment successful. Your ticket is ready.</strong>
-              <p>Show the QR code at the theatre entrance for a quick check-in.</p>
+              <strong>Demo booking confirmed. Your ticket is ready.</strong>
+              <p>This prototype does not charge money. Scan the QR to read ticket details.</p>
             </div>
           </div>
         )}
         {loading ? (
-          <p className="mt-8 rounded-xl bg-[#ffffff] p-8 text-center font-bold text-[#667085]">
+          <p className="mt-8 rounded-2xl border border-canvas-muted bg-surface p-8 text-center font-sans font-medium text-ink-secondary shadow-cozy">
             Loading booking history…
           </p>
         ) : !bookings.length ? (
-          <div className="mt-9 rounded-2xl border border-dashed border-[#d0d5dd] bg-[#ffffff] p-10 text-center">
+          <div className="mt-9 rounded-2xl border border-dashed border-canvas-muted bg-surface p-10 text-center shadow-cozy">
             <div className="text-4xl" aria-hidden="true">
               🎟️
             </div>
-            <h2 className="mt-4 text-2xl font-black text-[#483e2d]">
+            <h2 className="mt-4 font-serif text-2xl font-bold text-ink-primary">
               No bookings yet
             </h2>
-            <p className="mt-2 text-base leading-7 text-[#667085]">
+            <p className="mt-2 font-sans text-base leading-7 text-ink-secondary">
               Choose a movie and complete the booking flow to see your tickets
               here.
             </p>
             <Link
               to="/movies"
-              className="mt-6 inline-flex rounded-xl bg-[#e4572e] px-6 py-3.5 text-base font-black text-white transition-all hover:-translate-y-1 hover:bg-[#c94423]"
+              className="mt-6 inline-flex rounded-xl bg-brand px-6 py-3.5 font-sans text-base font-semibold text-white shadow-cozy transition-all hover:bg-brand-hover active:scale-[0.99]"
             >
               Browse Movies
             </Link>
@@ -201,30 +222,42 @@ function Bookings() {
           <ul className="mt-9 space-y-6">
             {bookings.map((booking) => (
               <li key={booking.bookingId}>
-                <article className={`ticket-card overflow-hidden rounded-3xl border bg-white shadow-[0_18px_45px_rgba(20,33,61,0.10)] ${newBookingId === booking.bookingId ? "ticket-card-new" : ""}`}>
-                  <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[#e4e7ec] bg-[#f7f9fc] px-7 py-6 sm:px-9">
+                <article className={`overflow-hidden rounded-2xl border border-canvas-muted bg-surface shadow-cozy ${newBookingId === booking.bookingId ? "ticket-card-new ring-2 ring-brand/30" : ""}`}>
+                  <header className="flex flex-wrap items-start justify-between gap-4 border-b border-pink-200 bg-gradient-to-r from-pink-100 via-rose-50 to-white px-7 py-5 sm:px-8">
                     <div>
-                      <p className="text-sm font-bold uppercase tracking-wide text-[#98a2b3]">
+                      <p className="font-sans text-xs font-bold uppercase tracking-wider text-ink-tertiary">
                         Booking ID
                       </p>
-                      <p className="mt-1 font-mono text-xl font-black text-[#e4572e]">
+                      <p className="mt-1 font-mono text-xl font-bold text-brand">
                         {booking.bookingId}
                       </p>
                     </div>
                     <span
-                      className={`rounded-full px-4 py-2 text-sm font-black ${booking.status === "cancelled" ? "bg-red-100 text-red-800" : booking.status === "paid" ? "bg-[#e6f5ef] text-[#147d61]" : "bg-[#eef1f7] text-[#475467]"}`}
+                      className={`rounded-full px-4 py-1.5 font-sans text-xs font-bold ${
+                        booking.status === "cancelled"
+                          ? "bg-red-100 text-red-800"
+                          : booking.status === "paid"
+                            ? "bg-brand-light text-brand"
+                            : booking.status === "expired"
+                              ? "bg-orange-100 text-orange-800"
+                              : booking.status === "pending_payment"
+                                ? "bg-amber/15 text-amber"
+                                : "bg-canvas text-ink-secondary"
+                      }`}
                     >
-                      {booking.status === "cancelled" ? "Cancelled" : booking.status === "paid" ? "✓ Paid" : "Confirmed"}
+                      {booking.status === "cancelled" ? "Cancelled" : booking.status === "paid" ? "✓ Ticket confirmed · demo" : booking.status === "expired" ? "Expired" : booking.status === "pending_payment" ? "⏳ Pending Payment" : "Confirmed"}
                     </span>
                   </header>
-                  <div className="grid gap-8 p-7 sm:p-9 lg:grid-cols-[1fr_260px]">
+                  <div className="grid gap-8 bg-gradient-to-br from-white via-pink-50/50 to-rose-100/60 p-7 sm:p-8 lg:grid-cols-[1fr_260px]">
                     <div>
-                      <h2 className="text-3xl font-black text-[#14213d]">
-                        {booking.movie}
-                      </h2>
-                      <p className="mt-2 text-base font-bold text-[#667085]">
-                        {booking.theatre} · {booking.show}
-                      </p>
+                      <div className="flex items-start gap-5">
+                        {booking.movieImage && <img src={booking.movieImage} alt={`${booking.movie} poster`} className="h-36 w-24 shrink-0 rounded-xl object-cover shadow-poster ring-1 ring-pink-200 sm:h-44 sm:w-32" />}
+                        <div className="min-w-0">
+                          <p className="font-sans text-xs font-bold uppercase tracking-[0.16em] text-pink-700">Your movie night</p>
+                          <h2 className="mt-1 font-serif text-3xl font-bold tracking-tight text-ink-primary">{booking.movie}</h2>
+                          <p className="mt-2 font-sans text-base font-medium text-ink-secondary">{booking.theatre} · {booking.show}</p>
+                        </div>
+                      </div>
                       <dl className="mt-7 grid gap-4 sm:grid-cols-2">
                         <Info
                           label="Seats"
@@ -240,13 +273,13 @@ function Bookings() {
                         <Info label="Customer" value={booking.customer?.name} />
                         <Info label="Email" value={booking.customer?.email} />
                       </dl>
-                      <div className="mt-5 flex flex-wrap gap-3">
+                      <div className="mt-6 flex flex-wrap gap-3">
                         <button
                           disabled={
                             !!actionId || booking.status === "cancelled"
                           }
                           onClick={() => editCustomer(booking)}
-                          className="rounded-lg border border-[#cdbb9d] px-4 py-2 text-sm font-bold text-[#344054] disabled:opacity-50"
+                          className="rounded-xl border border-canvas-muted bg-surface px-4 py-2 font-sans text-xs font-semibold text-ink-primary shadow-cozy transition-all hover:bg-canvas disabled:opacity-50"
                         >
                           {actionId === booking.bookingId
                             ? "Working…"
@@ -257,14 +290,20 @@ function Bookings() {
                             !!actionId || booking.status === "cancelled"
                           }
                           onClick={() => cancel(booking)}
-                          className="rounded-lg border border-red-200 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-50"
+                          className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 font-sans text-xs font-semibold text-red-700 transition-all hover:bg-red-100 disabled:opacity-50"
                         >
                           Cancel booking
                         </button>
                       </div>
                     </div>
-                    <aside className="rounded-3xl border border-[#e4e7ec] bg-[#f7f9fc] p-5 text-center">
-                      {booking.status === "paid" ? <QrTicket booking={booking} /> : <p className="text-sm font-bold leading-6 text-[#667085]">Payment is still pending. Your QR ticket will appear once payment is complete.</p>}
+                    <aside className="rounded-2xl border border-dashed border-pink-300 bg-white/85 p-5 text-center flex flex-col items-center justify-center shadow-cozy">
+                      {booking.status === "paid" ? (
+                        <QrTicket booking={booking} />
+                      ) : (
+                        <p className="font-sans text-xs font-semibold leading-6 text-ink-secondary">
+                          Payment is still pending. Your QR ticket will appear once payment is complete.
+                        </p>
+                      )}
                     </aside>
                   </div>
                 </article>
@@ -279,16 +318,17 @@ function Bookings() {
 
 function Info({ label, value, highlight }) {
   return (
-    <div className="rounded-xl border border-[#e4e7ec] bg-[#f8fafc] p-4">
-      <dt className="text-sm font-bold uppercase tracking-wide text-[#98a2b3]">
+    <div className="rounded-xl border border-canvas-muted bg-canvas/30 p-4">
+      <dt className="font-sans text-xs font-bold uppercase tracking-wider text-ink-tertiary">
         {label}
       </dt>
       <dd
-        className={`mt-1 text-base font-bold leading-6 ${highlight ? "text-[#e4572e]" : "text-[#344054]"}`}
+        className={`mt-1 font-sans text-base leading-6 ${highlight ? "font-bold text-brand" : "font-semibold text-ink-primary"}`}
       >
         {value || "—"}
       </dd>
     </div>
   );
 }
+
 export default Bookings;
