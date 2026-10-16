@@ -21,7 +21,8 @@ dotenv.config({
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
 const NODE_ENV = process.env.NODE_ENV || "development";
-const PAYMENT_MODE = process.env.PAYMENT_MODE || (NODE_ENV === "production" ? "provider" : "demo");
+const PAYMENT_MODE =
+  process.env.PAYMENT_MODE || (NODE_ENV === "production" ? "provider" : "demo");
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!["demo", "provider"].includes(PAYMENT_MODE)) {
@@ -33,7 +34,11 @@ if (NODE_ENV === "production" && PAYMENT_MODE === "demo") {
   process.exit(1);
 }
 
-if (!JWT_SECRET || JWT_SECRET.length < 32 || /REPLACE_WITH|CHANGE_ME|YOUR_SECRET/i.test(JWT_SECRET)) {
+if (
+  !JWT_SECRET ||
+  JWT_SECRET.length < 32 ||
+  /REPLACE_WITH|CHANGE_ME|YOUR_SECRET/i.test(JWT_SECRET)
+) {
   console.error(
     "FATAL: Set JWT_SECRET to a cryptographically random secret of at least 32 characters in server/.env",
   );
@@ -91,11 +96,15 @@ const configuredOrigins = process.env.CLIENT_ORIGIN
   : defaultAllowedOrigins;
 
 if (NODE_ENV === "production" && !process.env.CLIENT_ORIGIN) {
-  console.error("FATAL: Set CLIENT_ORIGIN to the exact HTTPS frontend origin in production.");
+  console.error(
+    "FATAL: Set CLIENT_ORIGIN to the exact HTTPS frontend origin in production.",
+  );
   process.exit(1);
 }
 if (NODE_ENV === "production" && configuredOrigins.includes("*")) {
-  console.error("FATAL: CLIENT_ORIGIN must not use '*' with credentialed CORS in production.");
+  console.error(
+    "FATAL: CLIENT_ORIGIN must not use '*' with credentialed CORS in production.",
+  );
   process.exit(1);
 }
 
@@ -104,9 +113,12 @@ app.use(
     origin: (origin, callback) => {
       // Allow server-to-server or tools with no origin header
       if (!origin) return callback(null, true);
-      const allowed = NODE_ENV === "production"
-        ? configuredOrigins.includes(origin)
-        : configuredOrigins.includes("*") || configuredOrigins.includes(origin) || defaultAllowedOrigins.includes(origin);
+      const allowed =
+        NODE_ENV === "production"
+          ? configuredOrigins.includes(origin)
+          : configuredOrigins.includes("*") ||
+            configuredOrigins.includes(origin) ||
+            defaultAllowedOrigins.includes(origin);
       if (allowed) {
         return callback(null, true);
       }
@@ -276,13 +288,19 @@ function isValidSeat(seat) {
 }
 
 function currentBookingDate() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(
+    new Date(),
+  );
 }
 
 function isValidBookingDate(value) {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
+    return false;
   const parsed = new Date(`${value}T00:00:00.000Z`);
-  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+  return (
+    Number.isFinite(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === value
+  );
 }
 
 function isAllowedBookingDate(value) {
@@ -298,14 +316,20 @@ function getBookingShowDate(booking) {
   if (booking.bookedAt) {
     const bookedAt = new Date(booking.bookedAt);
     if (Number.isFinite(bookedAt.getTime())) {
-      return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(bookedAt);
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+      }).format(bookedAt);
     }
   }
   return "1970-01-01";
 }
 
 function isSeatActive(booking, now = Date.now()) {
-  if (booking.status === "paid" || booking.status === "confirmed" || isDemoConfirmation(booking)) {
+  if (
+    booking.status === "paid" ||
+    booking.status === "confirmed" ||
+    isDemoConfirmation(booking)
+  ) {
     return true;
   }
   if (booking.status === "pending_payment") {
@@ -317,7 +341,11 @@ function isSeatActive(booking, now = Date.now()) {
 }
 
 function isDemoConfirmation(booking) {
-  return booking.status === "demo_confirmed" && booking.paymentMode === "demo" && Boolean(booking.demoConfirmedAt && booking.demoReference);
+  return (
+    booking.status === "demo_confirmed" &&
+    booking.paymentMode === "demo" &&
+    Boolean(booking.demoConfirmedAt && booking.demoReference)
+  );
 }
 
 function makeDemoReceipt(booking) {
@@ -331,7 +359,15 @@ function makeDemoReceipt(booking) {
   };
 }
 
-function seatsConflict(db, movieId, theatre, show, seats, showDate, exceptId = null) {
+function seatsConflict(
+  db,
+  movieId,
+  theatre,
+  show,
+  seats,
+  showDate,
+  exceptId = null,
+) {
   const now = Date.now();
   const seatsSet = new Set(seats.map(String));
 
@@ -344,7 +380,8 @@ function seatsConflict(db, movieId, theatre, show, seats, showDate, exceptId = n
     const matchesShow = b.show.trim() === String(show).trim();
     const matchesDate = getBookingShowDate(b) === String(showDate);
 
-    if (!matchesMovie || !matchesTheatre || !matchesShow || !matchesDate) return false;
+    if (!matchesMovie || !matchesTheatre || !matchesShow || !matchesDate)
+      return false;
 
     return b.seats.some((seat) => seatsSet.has(String(seat)));
   });
@@ -368,7 +405,8 @@ function getSelectedShow(db, show, theatreId) {
       String(s.id) === String(show).trim() || s.time === String(show).trim(),
   );
   if (!selected) return undefined;
-  return selected.theatreId == null || String(selected.theatreId) === String(theatreId)
+  return selected.theatreId == null ||
+    String(selected.theatreId) === String(theatreId)
     ? selected
     : undefined;
 }
@@ -383,9 +421,13 @@ function calculateAmount(price, seats, selectedShow = null) {
 }
 
 function cancelBookingRecord(booking) {
-  const wasPaid = booking.status === "paid" && Boolean(
-    booking.paymentProvider && booking.providerTransactionId && booking.paymentVerifiedAt,
-  );
+  const wasPaid =
+    booking.status === "paid" &&
+    Boolean(
+      booking.paymentProvider &&
+      booking.providerTransactionId &&
+      booking.paymentVerifiedAt,
+    );
   booking.status = "cancelled";
   booking.cancelledAt = new Date().toISOString();
   if (wasPaid) {
@@ -819,16 +861,23 @@ app.get("/availability", (req, res, next) => {
 
     if (!movieId || !theatre || !show || !isAllowedBookingDate(showDate)) {
       return res.status(400).json({
-        message: "movieId, theatre, show, and a valid YYYY-MM-DD date are required.",
+        message:
+          "movieId, theatre, show, and a valid YYYY-MM-DD date are required.",
         code: "INVALID_QUERY",
       });
     }
 
     const db = readDB();
     const selectedTheatre = getSelectedTheatre(db, theatre);
-    const selectedShow = selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
+    const selectedShow =
+      selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
     if (!selectedTheatre || !selectedShow) {
-      return res.status(400).json({ message: "The selected theatre/show combination is invalid.", code: "INVALID_SHOW" });
+      return res
+        .status(400)
+        .json({
+          message: "The selected theatre/show combination is invalid.",
+          code: "INVALID_SHOW",
+        });
     }
     const now = Date.now();
     const bookedSeats = [];
@@ -841,7 +890,11 @@ app.get("/availability", (req, res, next) => {
         b.show.trim() === String(show).trim() &&
         getBookingShowDate(b) === showDate
       ) {
-        if (b.status === "paid" || b.status === "confirmed" || isDemoConfirmation(b)) {
+        if (
+          b.status === "paid" ||
+          b.status === "confirmed" ||
+          isDemoConfirmation(b)
+        ) {
           bookedSeats.push(...b.seats);
         } else if (
           b.status === "pending_payment" &&
@@ -903,14 +956,20 @@ app.get("/tickets/verify/:bookingId", ticketVerifyLimiter, (req, res, next) => {
       });
     }
 
-    const verifiedProviderPayment = booking.status === "paid" && Boolean(
-      booking.paymentProvider && booking.providerTransactionId && booking.paymentVerifiedAt,
-    );
-    const validDemoConfirmation = PAYMENT_MODE === "demo" && isDemoConfirmation(booking);
+    const verifiedProviderPayment =
+      booking.status === "paid" &&
+      Boolean(
+        booking.paymentProvider &&
+        booking.providerTransactionId &&
+        booking.paymentVerifiedAt,
+      );
+    const validDemoConfirmation =
+      PAYMENT_MODE === "demo" && isDemoConfirmation(booking);
     if (!verifiedProviderPayment && !validDemoConfirmation) {
       return res.status(200).json({
         valid: false,
-        reason: "This booking has no valid payment confirmation and is not valid for entry.",
+        reason:
+          "This booking has no valid payment confirmation and is not valid for entry.",
         status: booking.status,
         booking: {
           bookingId: booking.bookingId,
@@ -925,7 +984,8 @@ app.get("/tickets/verify/:bookingId", ticketVerifyLimiter, (req, res, next) => {
     }
 
     const matchedMovie = db.movies.find(
-      (m) => String(m.id) === String(booking.movieId) || m.title === booking.movie,
+      (m) =>
+        String(m.id) === String(booking.movieId) || m.title === booking.movie,
     );
 
     return res.json({
@@ -947,8 +1007,12 @@ app.get("/tickets/verify/:bookingId", ticketVerifyLimiter, (req, res, next) => {
         seats: booking.seats,
         status: booking.status,
         paymentMode: validDemoConfirmation ? "demo" : "provider",
-        demoReference: validDemoConfirmation ? booking.demoReference : undefined,
-        demoConfirmedAt: validDemoConfirmation ? booking.demoConfirmedAt : undefined,
+        demoReference: validDemoConfirmation
+          ? booking.demoReference
+          : undefined,
+        demoConfirmedAt: validDemoConfirmation
+          ? booking.demoConfirmedAt
+          : undefined,
       },
     });
   } catch (err) {
@@ -1058,7 +1122,8 @@ app.post("/bookings", auth, bookingLimiter, async (req, res, next) => {
       }
 
       const selectedTheatre = getSelectedTheatre(db, theatre);
-      const selectedShow = selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
+      const selectedShow =
+        selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
 
       if (!selectedTheatre || !selectedShow) {
         return { error: "Selected theatre or show is invalid.", status: 400 };
@@ -1145,7 +1210,8 @@ app.put("/bookings/:id", auth, async (req, res, next) => {
       typeof paymentMethod !== "string" ||
       !paymentMethod.trim() ||
       paymentMethod.trim().length > 40 ||
-      (requestedShowDate !== undefined && !isAllowedBookingDate(requestedShowDate))
+      (requestedShowDate !== undefined &&
+        !isAllowedBookingDate(requestedShowDate))
     ) {
       return res.status(400).json({
         message: "Invalid booking details.",
@@ -1172,13 +1238,15 @@ app.put("/bookings/:id", auth, async (req, res, next) => {
 
       if (booking.status !== "pending_payment") {
         return {
-          error: "Only pending-payment holds can be changed; finalized bookings are immutable.",
+          error:
+            "Only pending-payment holds can be changed; finalized bookings are immutable.",
           status: 409,
         };
       }
 
       const selectedTheatre = getSelectedTheatre(db, theatre);
-      const selectedShow = selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
+      const selectedShow =
+        selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
 
       if (!selectedTheatre || !selectedShow) {
         return { error: "Selected theatre or show is invalid.", status: 400 };
@@ -1213,7 +1281,8 @@ app.put("/bookings/:id", auth, async (req, res, next) => {
 
       booking.theatre = theatre.trim().slice(0, 160);
       booking.show = show.trim().slice(0, 80);
-      booking.showDate = requestedShowDate || booking.showDate || currentBookingDate();
+      booking.showDate =
+        requestedShowDate || booking.showDate || currentBookingDate();
       booking.format = selectedShow?.format || booking.format || "Standard";
       booking.seats = uniqueSeats;
       booking.customer = getCustomer(req.user);
@@ -1384,20 +1453,34 @@ app.post(
           return { error: "Booking not found.", status: 404 };
         }
         if (booking.userId !== req.user.id && req.user.role !== "admin") {
-          return { error: "You cannot authorize payment for another user's booking.", status: 403 };
+          return {
+            error: "You cannot authorize payment for another user's booking.",
+            status: 403,
+          };
         }
 
         if (booking.status === "demo_confirmed") {
           if (!isDemoConfirmation(booking)) {
-            return { error: "This booking has an invalid demo confirmation record.", status: 409 };
+            return {
+              error: "This booking has an invalid demo confirmation record.",
+              status: 409,
+            };
           }
           return { receipt: makeDemoReceipt(booking) };
         }
 
         // Only a provider-verified transaction can be returned as paid.
         if (booking.status === "paid") {
-          if (!booking.paymentProvider || !booking.providerTransactionId || !booking.paymentVerifiedAt) {
-            return { error: "This booking has no verifiable payment-provider transaction.", status: 409 };
+          if (
+            !booking.paymentProvider ||
+            !booking.providerTransactionId ||
+            !booking.paymentVerifiedAt
+          ) {
+            return {
+              error:
+                "This booking has no verifiable payment-provider transaction.",
+              status: 409,
+            };
           }
           return {
             receipt: {
@@ -1448,14 +1531,17 @@ app.post(
 
         // Provider mode stays fail-closed until a real gateway is integrated.
         return {
-          error: "A real payment provider is not configured. The seat hold remains pending and no payment was taken.",
+          error:
+            "A real payment provider is not configured. The seat hold remains pending and no payment was taken.",
           status: 503,
           code: "PAYMENT_PROVIDER_UNAVAILABLE",
         };
       });
 
       if (result.error) {
-        return res.status(result.status).json({ message: result.error, code: result.code });
+        return res
+          .status(result.status)
+          .json({ message: result.error, code: result.code });
       }
 
       res.json(result.receipt);
