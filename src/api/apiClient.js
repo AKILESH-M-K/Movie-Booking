@@ -8,9 +8,9 @@ const apiConfig = resolveApiConfig({
   pageOrigin: globalThis.location?.origin || "https://cinebook.invalid",
 });
 
-if (apiConfig.invalid) {
+if (import.meta.env.PROD && !apiConfig.enabled) {
   console.warn(
-    "[CineBook] Production API is not using HTTPS. API access is disabled; bundled demo data will be used.",
+    "[CineBook] Production API is not configured with a valid HTTPS URL. Sign-in, booking, and payment are disabled.",
   );
 }
 

@@ -421,70 +421,6 @@
       ]
     }
   ],
-  "users": [
-    {
-      "id": "admin-cinebook-seed-001",
-      "name": "CineBook Admin",
-      "email": "admin@cinebook.com",
-      "phone": "9876543210",
-      "role": "admin",
-      "passwordHash": "$2b$10$1bu5wsg7Y.duQ5MAo.nOBu17.OwDQraJdMVLworGJwKah//Dnf3Em",
-      "createdAt": "2026-01-01T00:00:00.000Z"
-    },
-    {
-      "id": "customer-cinebook-seed-002",
-      "name": "Demo Customer",
-      "email": "demo@cinebook.com",
-      "phone": "9876543211",
-      "role": "customer",
-      "passwordHash": "$2b$10$P./lby.2MNDEoGabLbqjl.KRQ60hLVbGVQtiexSH1g/O/UKWNi1VG",
-      "createdAt": "2026-01-01T00:00:00.000Z"
-    },
-    {
-      "id": "26c84b9b-9585-4437-9bea-b692743bdb18",
-      "name": "akilesh",
-      "email": "akil@gmail.com",
-      "phone": "9854232157",
-      "role": "customer",
-      "passwordHash": "$2b$12$vDUifx10WIZOoRQhCh7Vium2UF23.vfO4gUdFJnMLtSrnb0cL5lmO",
-      "createdAt": "2026-10-11T02:56:52.715Z",
-      "updatedAt": "2026-10-12T02:02:30.849Z"
-    },
-    {
-      "id": "ba993499-a956-45ea-8a7c-d94dd55345ea",
-      "name": "madhu",
-      "email": "madhukalai1202@gmail.com",
-      "phone": "6369441041",
-      "role": "customer",
-      "passwordHash": "$2b$12$dCLDdItTGJ8YIG/5HbzqMe3gy3jD.lNEfhQ04B.aqNoBfr9FUe1ea",
-      "createdAt": "2026-10-15T07:52:11.738Z"
-    }
-  ],
-  "bookings": [
-    {
-      "bookingId": "CB7DC641CE60A8",
-      "userId": "customer-cinebook-seed-002",
-      "movieId": 102,
-      "movie": "Inception",
-      "theatre": "PVR INOX",
-      "show": "07:30 PM",
-      "seats": [
-        "E9",
-        "E8"
-      ],
-      "customer": {
-        "name": "Demo Customer",
-        "email": "demo@cinebook.com",
-        "phone": "9876543211"
-      },
-      "amount": 590,
-      "paymentMethod": "UPI",
-      "bookedAt": "2026-10-10T12:00:00.000Z",
-      "status": "paid",
-      "paymentReference": "DEMO-53157884A3",
-      "paidAt": "2026-10-10T12:01:00.000Z"
-    }
-  ],
   "shows": [
     {
       "id": 1,
@@ -535,6 +471,52 @@
       "format": "2D",
       "language": "English",
       "priceMultiplier": 1
+    }
+  ],
+  "users": [
+    {
+      "id": "59f4bb58-e658-4184-9bba-f67774aeaff4",
+      "name": "madhu",
+      "email": "madhukalai1202@gmail.com",
+      "phone": "7418529630",
+      "role": "customer",
+      "passwordHash": "$2b$12$Eu1j9gZX3Vd5CWhSGeqOZOKroxjNKB7uJDmOoVbAaPoRxMX8Aw2P2",
+      "createdAt": "2026-10-16T02:50:28.064Z"
+    }
+  ],
+  "bookings": [
+    {
+      "bookingId": "CB04C5EE4B207A",
+      "userId": "59f4bb58-e658-4184-9bba-f67774aeaff4",
+      "movieId": 103,
+      "movie": "Avengers: Endgame",
+      "movieImage": "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+      "duration": "3h 1m",
+      "genre": "Action",
+      "language": "English",
+      "theatre": "PVR INOX",
+      "show": "01:30 PM",
+      "showDate": "2026-10-16",
+      "format": "2D",
+      "seats": [
+        "C5",
+        "C6"
+      ],
+      "customer": {
+        "name": "madhu",
+        "email": "madhukalai1202@gmail.com",
+        "phone": "7418529630"
+      },
+      "amount": 610,
+      "paymentMethod": "Demo confirmation",
+      "bookedAt": "2026-10-16T02:51:25.740Z",
+      "expiresAt": "2026-10-16T03:01:25.740Z",
+      "status": "demo_confirmed",
+      "idempotencyKey": "7fd7e993-e4af-4446-b049-31362231d76b",
+      "paymentMode": "demo",
+      "demoReference": "DEMO-3AC864E55C",
+      "demoConfirmedAt": "2026-10-16T02:51:25.786Z",
+      "updatedAt": "2026-10-16T02:51:25.786Z"
     }
   ]
 }

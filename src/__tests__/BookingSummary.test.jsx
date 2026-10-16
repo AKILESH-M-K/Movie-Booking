@@ -16,7 +16,7 @@ const booking = {
   ticketPrice: 550,
   convenienceCharge: 50,
   totalAmount: 600,
-  customer: { name: "Akilesh", email: "akilesh@example.com", phone: "9876543210" },
+  customer: { name: "Sample Viewer", email: "sample@example.invalid", phone: "9000000000" },
   updateCustomer,
   prefillCustomer,
 };

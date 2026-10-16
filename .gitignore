@@ -33,6 +33,8 @@ server/.env.*
 !server/.env.example
 
 # Local SQLite / Database backups
+db.json
+server/data/
 *.db
 *.db-journal
 *.sqlite

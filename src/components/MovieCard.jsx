@@ -2,7 +2,7 @@ function MovieCard({ movie, onSelect }) {
   return (
     <article className="group overflow-hidden bg-surface rounded-2xl shadow-cozy border border-canvas-muted transition-all duration-300 hover:-translate-y-2 hover:shadow-xl flex flex-col justify-between">
       {/* Poster with prominent ring boundary and warm shadow */}
-      <div className="p-4 pb-0">
+      <div className="p-5 pb-0">
         <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl ring-1 ring-ink-primary/10 shadow-poster bg-canvas-muted">
           <img
             src={movie.image}
@@ -28,9 +28,9 @@ function MovieCard({ movie, onSelect }) {
       </div>
 
       {/* Content details */}
-      <div className="p-6 pt-5 flex flex-col justify-between flex-1">
+      <div className="p-7 pt-6 flex flex-col justify-between flex-1">
         <div>
-          <h3 className="line-clamp-2 font-serif text-2xl lg:text-[1.65rem] font-bold tracking-tight text-ink-primary leading-tight">
+          <h3 className="line-clamp-2 font-serif text-[1.7rem] lg:text-3xl font-bold tracking-tight text-ink-primary leading-tight">
             {movie.title}
           </h3>
           <p className="mt-2.5 font-sans text-sm font-medium leading-6 text-ink-secondary">

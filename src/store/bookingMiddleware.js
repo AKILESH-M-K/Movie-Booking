@@ -4,6 +4,7 @@ const PERSISTED_ACTIONS = new Set([
   "booking/selectMovie",
   "booking/selectTheatre",
   "booking/selectShow",
+  "booking/selectDate",
   "booking/selectSeat",
   "booking/removeSeat",
   "booking/updateCustomer",
@@ -30,6 +31,7 @@ const bookingMiddleware = (store) => (next) => (action) => {
       selectedMovie: state.selectedMovie,
       selectedTheatre: state.selectedTheatre,
       selectedShow: state.selectedShow,
+      selectedDate: state.selectedDate,
       selectedSeats: state.selectedSeats,
       customer: state.customer,
     };

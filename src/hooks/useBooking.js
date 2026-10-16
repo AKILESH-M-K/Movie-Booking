@@ -5,6 +5,7 @@ import {
   prefillCustomer,
   removeSeat,
   selectMovie,
+  selectDate,
   selectSeat,
   selectShow,
   selectTheatre,
@@ -26,7 +27,9 @@ export default function useBooking() {
 
   const selectedSeatObjects = seats.filter((seat) => booking.selectedSeats.includes(seat.id));
   const selectedSeatCount = selectedSeatObjects.length;
-  const basePrice = booking.selectedMovie?.price ?? 0;
+  const basePrice = Math.round(
+    (booking.selectedMovie?.price ?? 0) * (Number(booking.selectedShow?.priceMultiplier) || 1),
+  );
 
   const ticketPrice = selectedSeatObjects.reduce(
     (total, seat) => total + basePrice + (seatCategories[seat.type]?.surcharge ?? 0),
@@ -45,6 +48,7 @@ export default function useBooking() {
     selectMovie: (movie) => dispatch(selectMovie(movie)),
     selectTheatre: (theatre) => dispatch(selectTheatre(theatre)),
     selectShow: (show) => dispatch(selectShow(show)),
+    selectDate: (date) => dispatch(selectDate(date)),
     selectSeat: (seatId) => dispatch(selectSeat(seatId)),
     removeSeat: (seatId) => dispatch(removeSeat(seatId)),
     prefillCustomer: prefill,

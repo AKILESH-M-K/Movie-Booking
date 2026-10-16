@@ -4,6 +4,8 @@ import QRCode from "qrcode";
 import { apiClient, API_ENABLED } from "../api/apiClient";
 import { findAnyBookingById } from "../utils/bookingStore";
 import { fetchMovies } from "../api/movieApi";
+import { fetchAvailability } from "../api/bookingApi";
+import { makeTicketUrl } from "../utils/ticketUrl";
 
 /**
  * TicketVerification — Standalone Original Digital Movie Ticket Pass
@@ -17,10 +19,21 @@ function TicketVerification() {
 
   const [loading, setLoading] = useState(Boolean(bookingId));
   const [ticket, setTicket] = useState(null);
+  const [ticketValid, setTicketValid] = useState(false);
+  const [hallAvailability, setHallAvailability] = useState(null);
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState(
     bookingId ? "" : "No booking ID provided.",
   );
+  const ticketMovieId = ticket?.movieId;
+  const ticketTheatre = ticket?.theatre;
+  const ticketShow = ticket?.show;
+  const ticketShowDate = ticket?.showDate;
+  const availabilityRequest = useMemo(() => {
+    if (!ticketMovieId || !ticketTheatre || !ticketShow || !ticketShowDate) return null;
+    return { movieId: ticketMovieId, theatre: ticketTheatre, show: ticketShow, date: ticketShowDate };
+  }, [ticketMovieId, ticketTheatre, ticketShow, ticketShowDate]);
+  const availabilityKey = availabilityRequest ? JSON.stringify(availabilityRequest) : "";
 
   useEffect(() => {
     if (!bookingId) return;
@@ -32,25 +45,25 @@ function TicketVerification() {
         setLoading(true);
         setErrorMsg("");
 
-        // 1. Check local storage first
-        const localBooking = findAnyBookingById(bookingId);
-
-        // 2. Query server if API is enabled
-        let serverBooking = null;
+        let resolvedTicket = null;
         if (API_ENABLED) {
-          try {
-            const { data } = await apiClient.get(
-              `/tickets/verify/${encodeURIComponent(bookingId)}`,
-            );
-            if (data?.valid) {
-              serverBooking = data.booking;
+          const { data } = await apiClient.get(`/tickets/verify/${encodeURIComponent(bookingId)}`);
+          if (data?.booking) {
+            resolvedTicket = data.booking;
+            if (!cancelled) {
+              setTicketValid(data.valid === true);
+              if (data.valid !== true) setErrorMsg(data.reason || "This ticket is not valid for admission.");
             }
-          } catch (err) {
-            console.warn("Server verify query note:", err?.message);
+          } else {
+            throw new Error(data?.message || "The server could not verify this ticket.");
+          }
+        } else {
+          resolvedTicket = findAnyBookingById(bookingId);
+          if (resolvedTicket && !cancelled) {
+            setTicketValid(false);
+            setErrorMsg("This locally stored demo record is not a verified admission ticket.");
           }
         }
-
-        const resolvedTicket = serverBooking || localBooking;
 
         if (resolvedTicket) {
           // If movie poster/metadata is missing, retrieve from catalog
@@ -99,9 +112,7 @@ function TicketVerification() {
             });
           }
         } else {
-          if (!cancelled) {
-            setErrorMsg("Ticket not found. This QR does not match a saved booking.");
-          }
+          if (!cancelled) setErrorMsg("Ticket not found. This QR does not match a saved booking.");
         }
       } catch (err) {
         if (!cancelled) {
@@ -118,34 +129,35 @@ function TicketVerification() {
     };
   }, [bookingId]);
 
-  // Generate QR code for ticket pass
+  // QR opens the public pink ticket page; the server re-verifies the booking there.
   useEffect(() => {
-    if (!ticket?.bookingId) return;
-    const ticketData = JSON.stringify({
-      type: "CineBook-Demo-Ticket",
-      bookingId: ticket.bookingId,
-      movie: ticket.movie,
-      theatre: ticket.theatre,
-      show: ticket.show,
-      seats: ticket.seats,
-      status: ticket.status,
-    });
-    QRCode.toDataURL(ticketData, {
+    if (!ticketValid || !ticket?.bookingId) return undefined;
+    let active = true;
+    const ticketUrl = makeTicketUrl(ticket.bookingId);
+    QRCode.toDataURL(ticketUrl, {
       margin: 1,
       width: 180,
       color: { dark: "#1A1715", light: "#FAF8F5" },
     })
-      .then(setQrDataUrl)
+      .then((dataUrl) => { if (active) setQrDataUrl({ bookingId: ticket.bookingId, src: dataUrl }); })
       .catch((err) => console.warn("QR generation error:", err));
-  }, [ticket?.bookingId, ticket?.movie, ticket?.seats, ticket?.show, ticket?.status, ticket?.theatre]);
+    return () => { active = false; };
+  }, [ticketValid, ticket?.bookingId]);
 
-  // Real-time hall seats capacity & availability calculation
+  useEffect(() => {
+    let ignore = false;
+    if (!API_ENABLED || !ticketValid || !availabilityRequest) return () => { ignore = true; };
+    fetchAvailability(availabilityRequest)
+      .then((data) => { if (!ignore) setHallAvailability({ key: availabilityKey, data }); })
+      .catch(() => { if (!ignore) setHallAvailability({ key: availabilityKey, data: null }); });
+    return () => { ignore = true; };
+  }, [ticketValid, availabilityRequest, availabilityKey]);
+
+  // Display only inventory returned by the server; never fabricate occupancy.
   const hallStats = useMemo(() => {
-    const totalCapacity = 60; // 6 rows (A-F) x 10 seats
-    const userSeatsCount = ticket?.seats?.length || 1;
-    // Simulated other booked seats in this show hall
-    const otherBookedCount = 16;
-    const totalBooked = Math.min(totalCapacity, userSeatsCount + otherBookedCount);
+    if (!ticketValid || !hallAvailability || hallAvailability.key !== availabilityKey || !hallAvailability.data) return null;
+    const totalCapacity = 60;
+    const totalBooked = new Set([...(hallAvailability.data.bookedSeats || []), ...(hallAvailability.data.heldSeats || [])]).size;
     const availableCount = Math.max(0, totalCapacity - totalBooked);
     const percentAvailable = Math.round((availableCount / totalCapacity) * 100);
 
@@ -155,7 +167,7 @@ function TicketVerification() {
       availableCount,
       percentAvailable,
     };
-  }, [ticket]);
+  }, [hallAvailability, ticketValid, availabilityKey]);
 
   if (loading) {
     return (
@@ -193,15 +205,16 @@ function TicketVerification() {
   }
 
   const isCancelled = ticket?.status === "cancelled";
+  const isDemoTicket = ticket?.paymentMode === "demo" && ticket?.status === "demo_confirmed";
 
   return (
-    <main className="min-h-screen bg-canvas py-10 px-4 sm:px-6 lg:px-8 font-sans text-ink-primary selection:bg-brand-light selection:text-brand">
+    <main className="min-h-screen bg-gradient-to-b from-pink-50 via-canvas to-rose-100/60 py-10 px-4 sm:px-6 lg:px-8 font-sans text-ink-primary selection:bg-pink-100 selection:text-pink-800">
       <div className="mx-auto max-w-4xl">
         {/* Cinema Brand Header */}
         <header className="mb-8 flex flex-col items-center text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-light px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand shadow-sm">
             <span className="h-2 w-2 rounded-full bg-brand" />
-            Official Digital Admission Pass
+            {isDemoTicket ? "Demo ticket confirmed · no charge" : ticketValid ? "Verified Digital Admission Pass" : "Ticket Verification"}
           </div>
           <h1 className="mt-3 font-serif text-3xl sm:text-4xl font-bold tracking-tight text-ink-primary">
             CineBook Cinema Lounge
@@ -211,10 +224,16 @@ function TicketVerification() {
           </p>
         </header>
 
+        {isDemoTicket && (
+          <p role="note" className="mb-6 rounded-xl border border-pink-300 bg-pink-50 px-5 py-4 text-center font-sans text-sm font-bold leading-6 text-pink-900">
+            DEMO CONFIRMATION — no real payment was taken. This QR is for preview/testing only and is not valid for theatre admission.
+          </p>
+        )}
+
         {/* ── Original Movie Ticket Pass ── */}
-        <article className="relative overflow-hidden rounded-3xl border border-canvas-muted bg-surface shadow-2xl">
+        <article className="relative overflow-hidden rounded-3xl border border-pink-300 bg-gradient-to-br from-white via-pink-50 to-rose-100/90 shadow-2xl ring-1 ring-pink-200">
           {/* Top Decorative Velvet Strip */}
-          <div className="h-2.5 w-full bg-gradient-to-r from-brand via-brand-hover to-brand" />
+          <div className="h-2.5 w-full bg-gradient-to-r from-pink-500 via-rose-400 to-fuchsia-500" />
 
           <div className="grid lg:grid-cols-[1fr_310px]">
             {/* Main Ticket Section */}
@@ -233,12 +252,14 @@ function TicketVerification() {
 
                   <span
                     className={`rounded-full px-3.5 py-1 text-xs font-bold font-sans ${
-                      isCancelled
+                      !ticketValid
                         ? "bg-red-100 text-red-800"
-                        : "bg-brand-light text-brand ring-1 ring-brand/20"
+                        : isDemoTicket
+                          ? "bg-pink-100 text-pink-800 ring-1 ring-pink-200"
+                          : "bg-brand-light text-brand ring-1 ring-brand/20"
                     }`}
                   >
-                    {isCancelled ? "✕ CANCELLED" : "● DEMO TICKET · NO CHARGE"}
+                    {isDemoTicket ? "DEMO ONLY · NO PAYMENT TAKEN" : ticketValid ? "● PAYMENT VERIFIED" : isCancelled ? "✕ CANCELLED" : "! NOT VALID FOR ENTRY"}
                   </span>
                 </div>
 
@@ -256,7 +277,7 @@ function TicketVerification() {
                   {/* Title & Metadata */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-brand-light px-3 py-1 font-sans text-xs font-semibold text-brand">
+                      <span className="rounded-full bg-pink-100 px-3 py-1 font-sans text-xs font-semibold text-pink-800">
                         {ticket.genre}
                       </span>
                       <span className="rounded-full border border-canvas-muted bg-surface px-3 py-1 font-sans text-xs font-bold text-amber shadow-sm">
@@ -283,7 +304,7 @@ function TicketVerification() {
                 </div>
 
                 {/* Key Ticket Details Grid */}
-                <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 rounded-2xl border border-canvas-muted bg-canvas/30 p-4 sm:p-5">
+                <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 rounded-2xl border border-pink-200 bg-white/75 p-4 sm:p-5">
                   <div>
                     <span className="block font-sans text-[11px] font-bold uppercase tracking-wider text-ink-tertiary">
                       Show Time
@@ -293,6 +314,10 @@ function TicketVerification() {
                     </strong>
                   </div>
 
+                  <div>
+                    <span className="block font-sans text-[11px] font-bold uppercase tracking-wider text-ink-tertiary">Show Date</span>
+                    <strong className="mt-1 block font-sans text-lg font-bold text-ink-primary">{ticket.showDate || "—"}</strong>
+                  </div>
                   <div>
                     <span className="block font-sans text-[11px] font-bold uppercase tracking-wider text-ink-tertiary">
                       Format
@@ -306,17 +331,17 @@ function TicketVerification() {
                     <span className="block font-sans text-[11px] font-bold uppercase tracking-wider text-ink-tertiary">
                       Booked Seats
                     </span>
-                    <strong className="mt-1 block font-sans text-lg font-bold text-brand">
+                    <strong className="mt-1 block font-sans text-lg font-bold text-pink-700">
                       {ticket.seats?.join(", ")}
                     </strong>
                   </div>
 
                   <div>
                     <span className="block font-sans text-[11px] font-bold uppercase tracking-wider text-ink-tertiary">
-                      Total · Demo
+                      Verification
                     </span>
                     <strong className="mt-1 block font-sans text-lg font-bold text-ink-primary">
-                      ₹{ticket.amount}
+                      {isDemoTicket ? "Demo confirmed · no charge" : ticketValid ? "Payment verified" : "Unverified"}
                     </strong>
                   </div>
                 </div>
@@ -325,21 +350,16 @@ function TicketVerification() {
                 <div className="mt-6 rounded-2xl border border-canvas-muted bg-surface p-5 shadow-cozy">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <p className="font-sans text-xs font-bold uppercase tracking-wider text-ink-tertiary">
-                        Hall Seating & Capacity Status
-                      </p>
+                      <p className="font-sans text-xs font-bold uppercase tracking-wider text-ink-tertiary">Hall Seating & Capacity Status</p>
                       <h3 className="mt-1 font-serif text-lg font-bold text-ink-primary">
-                        {hallStats.availableCount} of {hallStats.totalCapacity} Seats Available
+                        {hallStats ? `${hallStats.availableCount} of ${hallStats.totalCapacity} Seats Available` : "Live seat availability unavailable"}
                       </h3>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-light px-3 py-1 font-sans text-xs font-bold text-brand w-fit">
-                      <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />
-                      {hallStats.percentAvailable}% Seats Open
-                    </span>
+                    {hallStats && <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-light px-3 py-1 font-sans text-xs font-bold text-brand w-fit"><span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />{hallStats.percentAvailable}% Seats Open</span>}
                   </div>
 
                   {/* Visual Progress Bar */}
-                  <div className="mt-4">
+                  {hallStats ? <div className="mt-4">
                     <div className="h-2.5 w-full overflow-hidden rounded-full bg-canvas-muted">
                       <div
                         className="h-full bg-brand transition-all duration-500 rounded-full"
@@ -352,32 +372,32 @@ function TicketVerification() {
                       <span>Booked: {hallStats.totalBooked} seats (including your seats {ticket.seats?.join(", ")})</span>
                       <span>Available: {hallStats.availableCount} seats</span>
                     </div>
-                  </div>
+                  </div> : <p className="mt-3 text-sm text-ink-secondary">Current occupancy is not displayed unless it can be confirmed by the booking server.</p>}
                 </div>
               </div>
 
               {/* Guest & Reference Footer */}
               <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-canvas-muted/80 pt-5 font-sans text-xs text-ink-secondary">
                 <div>
-                  <span className="text-ink-tertiary">Issued to: </span>
-                  <strong className="text-ink-primary">{ticket.customer?.name || "Guest Patron"}</strong>
+                  <span className="text-ink-tertiary">Admission state: </span>
+                  <strong className="text-ink-primary">{isDemoTicket ? "Demo confirmation only · not paid" : ticketValid ? "Provider payment verified" : "Unverified"}</strong>
                 </div>
                 <div>
-                  <span className="text-ink-tertiary">Transaction Ref: </span>
-                  <strong className="font-mono text-ink-primary">{ticket.paymentReference}</strong>
+                  <span className="text-ink-tertiary">Booking ID: </span>
+                  <strong className="font-mono text-ink-primary">{ticket.bookingId}</strong>
                 </div>
               </div>
             </div>
 
             {/* ── Tear-off Ticket Stub (Perforated Right Section) ── */}
-            <div className="relative border-t lg:border-t-0 lg:border-l border-dashed border-canvas-muted bg-canvas/30 p-6 sm:p-8 flex flex-col justify-between items-center text-center">
+            <div className="relative border-t lg:border-t-0 lg:border-l border-dashed border-pink-300 bg-gradient-to-br from-pink-100 via-rose-50 to-white p-6 sm:p-8 flex flex-col justify-between items-center text-center">
               {/* Notches for authentic ticket perforation feel */}
               <div
-                className="hidden lg:block absolute -left-3 top-10 h-6 w-6 rounded-full bg-canvas border-r border-canvas-muted shadow-inner"
+                className="hidden lg:block absolute -left-3 top-10 h-6 w-6 rounded-full bg-rose-100 border-r border-pink-300 shadow-inner"
                 aria-hidden="true"
               />
               <div
-                className="hidden lg:block absolute -left-3 bottom-10 h-6 w-6 rounded-full bg-canvas border-r border-canvas-muted shadow-inner"
+                className="hidden lg:block absolute -left-3 bottom-10 h-6 w-6 rounded-full bg-rose-100 border-r border-pink-300 shadow-inner"
                 aria-hidden="true"
               />
 
@@ -386,26 +406,26 @@ function TicketVerification() {
                   ADMIT {ticket.seats?.length || 1} GUEST(S)
                 </span>
                 <p className="mt-1 font-serif text-lg font-bold text-ink-primary">
-                  Cinema Entry Pass
+                  {isDemoTicket ? "Demo ticket · preview only" : "Cinema Entry Pass"}
                 </p>
 
                 {/* Scannable Admission QR Code */}
-                <div className="mt-4 mx-auto w-fit p-3 rounded-2xl bg-surface border border-canvas-muted shadow-cozy">
-                  {qrDataUrl ? (
+                <div className="mt-4 mx-auto w-fit p-3 rounded-2xl bg-white border border-pink-200 shadow-cozy">
+                  {ticketValid && qrDataUrl?.bookingId === ticket.bookingId ? (
                     <img
-                      src={qrDataUrl}
-                      alt="Scannable ticket admission code"
+                      src={qrDataUrl.src}
+                      alt="QR code opening this pink movie ticket page"
                       className="w-36 h-36 mx-auto rounded-lg"
                     />
                   ) : (
-                    <div className="w-36 h-36 flex items-center justify-center font-sans text-xs text-ink-tertiary">
-                      Generating pass…
+                    <div className="w-36 h-36 flex items-center justify-center p-3 font-sans text-xs text-center text-ink-tertiary">
+                      {ticketValid ? "Generating ticket QR…" : "No valid ticket QR — confirmation is not verified."}
                     </div>
                   )}
                 </div>
 
                 <p className="mt-3 font-sans text-xs font-semibold text-ink-secondary">
-                  Scan at Entrance Turnstile
+                  {isDemoTicket ? "Demo QR · opens preview ticket; not valid for real admission" : "Scan to open this movie ticket page"}
                 </p>
 
                 {/* Prominent Booking ID */}

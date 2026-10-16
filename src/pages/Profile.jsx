@@ -54,20 +54,15 @@ function Profile() {
     }
 
     setSaving(true);
-    console.log("🔄 [UPDATE] Updating profile:", { name: cleanName, phone: cleanPhone });
 
     try {
       const result = await updateProfile({ name: cleanName, phone: cleanPhone });
       if (!result.success) {
-        console.error("❌ [UPDATE] Profile update failed:", result.error);
         setProfileError(result.error || "Could not update profile.");
         return;
       }
-
-      console.log("✅ [UPDATE] Profile updated successfully:", { name: cleanName, phone: cleanPhone });
       setProfileMsg("Profile updated successfully!");
-    } catch (err) {
-      console.error("❌ [UPDATE] Unexpected error:", err);
+    } catch {
       setProfileError("Could not update profile. Please try again.");
     } finally {
       setSaving(false);
@@ -80,16 +75,13 @@ function Profile() {
   const handleGetMovies = async () => {
     setCrudLoading(true);
     setCrudStatus({ type: "", text: "" });
-    console.log("📥 [GET] Fetching all movies...");
     try {
       const movies = await fetchMovies();
-      console.log("✅ [GET] Movies list:", movies);
       setCrudStatus({
         type: "success",
-        text: `GET ✅  Retrieved ${movies.length} movies — see console (F12) for full list.`,
+        text: `GET ✅  Retrieved ${movies.length} movies.`,
       });
-    } catch (err) {
-      console.error("❌ [GET] Failed:", err);
+    } catch {
       setCrudStatus({ type: "error", text: "GET ❌  Failed. See console for details." });
     } finally {
       setCrudLoading(false);
@@ -121,11 +113,9 @@ function Profile() {
 
     setCrudLoading(true);
     setCrudStatus({ type: "", text: "" });
-    console.log("📤 [POST] Adding new movie:", moviePayload);
 
     try {
       const created = await createMovie(moviePayload);
-      console.log("✅ [POST] Movie created:", created);
       setCrudStatus({
         type: "success",
         text: `POST ✅  "${created.title}" added (ID: ${created.id}). See console for details.`,
@@ -134,8 +124,7 @@ function Profile() {
       setNewGenre("Action");
       setNewPrice("300");
       setShowAddForm(false);
-    } catch (err) {
-      console.error("❌ [POST] Failed:", err);
+    } catch {
       setAddError("Failed to add movie. Check the console for details.");
     } finally {
       setCrudLoading(false);
@@ -156,19 +145,16 @@ function Profile() {
 
     setCrudLoading(true);
     setCrudStatus({ type: "", text: "" });
-    console.log(`🗑️ [DELETE] Deleting movie ID: ${trimmedId}...`);
 
     try {
-      const result = await deleteMovie(trimmedId);
-      console.log("✅ [DELETE] Movie deleted:", result);
+      await deleteMovie(trimmedId);
       setCrudStatus({
         type: "success",
-        text: `DELETE ✅  Movie ID ${trimmedId} deleted. See console for details.`,
+        text: `DELETE ✅  Movie ID ${trimmedId} deleted.`,
       });
       setDeleteId("");
       setShowDeleteForm(false);
-    } catch (err) {
-      console.error("❌ [DELETE] Failed:", err);
+    } catch {
       setDeleteError(`Failed to delete movie ID ${trimmedId}. It may not exist.`);
     } finally {
       setCrudLoading(false);

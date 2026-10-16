@@ -1,35 +1,20 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import useBooking from "../hooks/useBooking";
-import { isValidUpi } from "../utils/validation";
-
-const METHODS = [
-  { id: "UPI", label: "UPI" },
-  { id: "Pay at Theatre", label: "Pay at theatre" },
-];
 
 function Payment({ onConfirm, onBack }) {
-  const { customer, totalAmount, payment, updatePayment } = useBooking();
+  const { customer, totalAmount } = useBooking();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const upiId = useId();
-
-  const method = METHODS.some((item) => item.id === payment.method) ? payment.method : "UPI";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
-    if (method === "UPI" && !isValidUpi(payment.upiId)) {
-      setError("Enter a valid UPI ID, for example name@bank.");
-      return;
-    }
-
     setSubmitting(true);
     try {
       await onConfirm();
     } catch (err) {
-      console.error("Demo booking confirmation failed:", err);
-      setError("Payment could not be completed because the booking could not be saved. No amount was charged. Please try again.");
+      setError(err.response?.data?.message || err.message || "Payment status could not be confirmed. No ticket was issued.");
     } finally {
       setSubmitting(false);
     }
@@ -49,10 +34,10 @@ function Payment({ onConfirm, onBack }) {
           Step 6 of 6
         </p>
         <h1 className="mt-2 font-serif text-4xl font-bold tracking-tight text-ink-primary">
-          Secure checkout
+          Demo checkout
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-ink-secondary font-sans">
-          Confirm a simulated demo booking and issue a ticket QR. No real payment is processed.
+          This prototype creates a demo booking confirmation only. It does not contact a bank or payment provider, and no money will be charged.
         </p>
 
         {error && (
@@ -79,7 +64,7 @@ function Payment({ onConfirm, onBack }) {
             </dl>
             <div className="mt-7 rounded-xl border border-canvas-muted bg-canvas/40 p-5">
               <p className="font-sans text-xs font-bold uppercase tracking-wider text-ink-tertiary">
-                Amount to pay
+                Display amount · demo only
               </p>
               <p className="mt-1 font-sans text-3xl font-bold text-brand">
                 ₹{totalAmount}
@@ -92,58 +77,21 @@ function Payment({ onConfirm, onBack }) {
             className="rounded-2xl border border-canvas-muted bg-surface p-6 shadow-cozy sm:p-7"
           >
             <h2 id="payment-method-heading" className="font-serif text-2xl font-bold text-ink-primary">
-              Payment method
+              Confirmation mode
             </h2>
             <form onSubmit={handleSubmit} className="mt-6 space-y-5 font-sans" noValidate>
-              <div className="grid grid-cols-2 gap-3" role="group" aria-label="Choose payment method">
-                {METHODS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-pressed={method === item.id}
-                    onClick={() => updatePayment("method", item.id)}
-                    className={`rounded-xl border px-4 py-3.5 text-base font-semibold font-sans transition-all active:scale-[0.99] ${
-                      method === item.id
-                        ? "border-brand bg-brand-light text-brand shadow-cozy"
-                        : "border-canvas-muted bg-surface text-ink-secondary hover:border-brand/40"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-
-              {method === "UPI" ? (
-                <div>
-                  <label htmlFor={upiId} className="mb-2 block text-sm font-medium text-ink-primary">
-                    UPI ID
-                  </label>
-                  <input
-                    id={upiId}
-                    type="text"
-                    value={payment.upiId}
-                    placeholder="name@bank"
-                    autoComplete="off"
-                    onChange={(e) => updatePayment("upiId", e.target.value)}
-                    className="w-full rounded-xl border border-canvas-muted bg-surface px-4 py-3.5 text-base text-ink-primary outline-none transition placeholder:text-ink-tertiary focus:border-brand focus:ring-4 focus:ring-brand/10"
-                  />
-                </div>
-              ) : (
-                <p className="rounded-xl border border-canvas-muted bg-canvas/30 px-4 py-3 text-sm font-medium leading-6 text-ink-secondary">
-                  Your seats are reserved. Pay at the theatre counter before the show starts.
+              <div className="rounded-xl border border-pink-300 bg-pink-50 px-5 py-5">
+                <p className="font-sans text-sm font-bold uppercase tracking-wider text-pink-800">Demo mode · no charge</p>
+                <p className="mt-2 text-sm leading-6 text-pink-900">
+                  Confirming creates a clearly marked demo ticket so you can test the booking flow. It is not proof of payment and cannot be used as a real paid booking.
                 </p>
-              )}
-
-              <div className="rounded-xl border border-brand/20 bg-brand-light/50 px-4 py-3 text-xs leading-5 text-brand font-medium">
-                Demo mode · This checkout does not charge money or contact a bank.
               </div>
               <button
                 type="submit"
-                aria-label="Confirm booking (demo — no charge)"
                 disabled={submitting}
                 className="w-full rounded-xl bg-brand py-4 text-base font-semibold font-sans text-white shadow-cozy transition-all hover:bg-brand-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
               >
-                {submitting ? "Confirming demo booking…" : `Confirm demo booking · ₹${totalAmount}`}
+                {submitting ? "Creating demo confirmation…" : "Confirm demo booking"}
               </button>
             </form>
           </section>

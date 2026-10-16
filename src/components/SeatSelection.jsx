@@ -1,7 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useBooking from "../hooks/useBooking";
 import Seat from "./common/Seat";
 import { getBookedSeats } from "../utils/availability";
+import { fetchAvailability } from "../api/bookingApi";
+import { API_ENABLED } from "../api/apiClient";
 import { MAX_SEATS_PER_BOOKING, seatRows, seatCategories } from "../data/bookingData";
 
 function SeatSelection({ onContinue, onBack }) {
@@ -9,12 +11,34 @@ function SeatSelection({ onContinue, onBack }) {
     selectedMovie,
     selectedTheatre,
     selectedShow,
+    selectedDate,
     selectedSeats,
     selectedSeatCount,
     selectSeat,
   } = useBooking();
   const [message, setMessage] = useState("");
+  const [availabilityResult, setAvailabilityResult] = useState(null);
   const seatMapRef = useRef(null);
+  const availabilityKey = JSON.stringify([selectedMovie?.id, selectedTheatre?.name, selectedShow?.time, selectedDate]);
+  const currentAvailability = availabilityResult?.key === availabilityKey ? availabilityResult : null;
+  const serverSeats = currentAvailability?.seats ?? null;
+  const availabilityError = currentAvailability?.error || "";
+  const availabilityLoading = API_ENABLED && Boolean(selectedMovie && selectedTheatre && selectedShow) && !currentAvailability;
+
+  useEffect(() => {
+    let ignore = false;
+    if (!API_ENABLED || !selectedMovie || !selectedTheatre || !selectedShow) {
+      return () => { ignore = true; };
+    }
+    fetchAvailability({ movieId: selectedMovie.id, theatre: selectedTheatre.name, show: selectedShow.time, date: selectedDate })
+      .then((result) => {
+        if (!ignore) setAvailabilityResult({ key: availabilityKey, seats: [...new Set([...(result.bookedSeats || []), ...(result.heldSeats || [])])], error: "" });
+      })
+      .catch((error) => {
+        if (!ignore) setAvailabilityResult({ key: availabilityKey, seats: [], error: error.response?.data?.message || "Could not load seat availability. Please retry." });
+      });
+    return () => { ignore = true; };
+  }, [selectedMovie, selectedTheatre, selectedShow, selectedDate, availabilityKey]);
 
   // Arrow keys move through the seat grid while native Tab/Shift+Tab remain available.
   const handleSeatKeyDown = (event, seat) => {
@@ -42,13 +66,15 @@ function SeatSelection({ onContinue, onBack }) {
     }
   };
 
-  const bookedSeats = getBookedSeats(selectedMovie, selectedTheatre, selectedShow);
-  const basePrice = selectedMovie?.price ?? 0;
+  const bookedSeats = API_ENABLED
+    ? (serverSeats || [])
+    : getBookedSeats(selectedMovie, selectedTheatre, selectedShow, selectedDate);
+  const basePrice = Math.round((selectedMovie?.price ?? 0) * (Number(selectedShow?.priceMultiplier) || 1));
 
   const priceFor = (type) => basePrice + (seatCategories[type]?.surcharge ?? 0);
 
   const handleSeatClick = (seat) => {
-    if (bookedSeats.includes(seat.id)) return;
+    if (availabilityLoading || availabilityError || bookedSeats.includes(seat.id)) return;
 
     if (!selectedSeats.includes(seat.id) && selectedSeats.length >= MAX_SEATS_PER_BOOKING) {
       setMessage(`You can select up to ${MAX_SEATS_PER_BOOKING} seats per booking.`);
@@ -59,14 +85,29 @@ function SeatSelection({ onContinue, onBack }) {
     selectSeat(seat.id);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    if (availabilityLoading || availabilityError) {
+      setMessage(availabilityError || "Wait for seat availability to load before continuing.");
+      return;
+    }
     if (!selectedSeatCount) {
       setMessage("Please select at least one available seat.");
       return;
     }
 
     // Re-check against current availability: another booking may have taken a seat.
-    const conflicts = selectedSeats.filter((seat) => bookedSeats.includes(seat));
+    let currentBooked = bookedSeats;
+    if (API_ENABLED) {
+      try {
+        const result = await fetchAvailability({ movieId: selectedMovie.id, theatre: selectedTheatre.name, show: selectedShow.time, date: selectedDate });
+        currentBooked = [...new Set([...(result.bookedSeats || []), ...(result.heldSeats || [])])];
+        setAvailabilityResult({ key: availabilityKey, seats: currentBooked, error: "" });
+      } catch (error) {
+        setMessage(error.response?.data?.message || "Could not recheck seats. Please retry.");
+        return;
+      }
+    }
+    const conflicts = selectedSeats.filter((seat) => currentBooked.includes(seat));
     if (conflicts.length) {
       setMessage(`Seat ${conflicts.join(", ")} was just booked. Please choose another seat.`);
       return;
@@ -92,7 +133,7 @@ function SeatSelection({ onContinue, onBack }) {
           Select Your Seats
         </h1>
         <p className="mt-3 text-base leading-7 text-ink-secondary font-sans">
-          {bookedSeats.length} seats are already booked for this show. Choose up to {MAX_SEATS_PER_BOOKING} seats.
+          {availabilityError ? availabilityError : availabilityLoading ? "Checking current seat inventory…" : `${bookedSeats.length} seats are booked or held for ${selectedDate}. Choose up to ${MAX_SEATS_PER_BOOKING} seats.`}
         </p>
 
         {message && (
@@ -149,7 +190,7 @@ function SeatSelection({ onContinue, onBack }) {
                           key={seat.id}
                           seat={seat}
                           selected={selectedSeats.includes(seat.id)}
-                          disabled={booked}
+                disabled={booked || availabilityLoading || Boolean(availabilityError)}
                           booked={booked}
                           price={priceFor(type)}
                           onClick={() => handleSeatClick(seat)}
@@ -202,7 +243,7 @@ function SeatSelection({ onContinue, onBack }) {
             <button
               type="button"
               onClick={handleContinue}
-              disabled={!selectedSeatCount}
+              disabled={!selectedSeatCount || availabilityLoading || Boolean(availabilityError)}
               className="rounded-xl bg-brand px-7 py-4 font-sans text-base font-semibold text-white shadow-cozy transition-all hover:bg-brand-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
             >
               Continue to Summary →

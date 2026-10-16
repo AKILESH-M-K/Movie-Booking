@@ -9,6 +9,7 @@ function BookingSummary({ onContinue, onBack }) {
     selectedMovie,
     selectedTheatre,
     selectedShow,
+    selectedDate,
     selectedSeats,
     ticketPrice,
     convenienceCharge,
@@ -83,6 +84,7 @@ function BookingSummary({ onContinue, onBack }) {
               <SummaryRow label="Theatre" value={selectedTheatre?.name || "Not selected"} />
               <SummaryRow label="Location" value={selectedTheatre?.location || "—"} />
               <SummaryRow label="Show" value={selectedShow?.time || "Not selected"} />
+              <SummaryRow label="Date" value={selectedDate || "Not selected"} />
               <SummaryRow label="Format" value={selectedShow?.format || "—"} />
               <SummaryRow label="Seats" value={seatsLabel} highlight />
             </dl>

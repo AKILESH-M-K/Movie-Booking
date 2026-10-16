@@ -5,12 +5,18 @@ const emptyCustomer = { name: "", email: "", phone: "" };
 const emptyPayment = { method: "UPI", upiId: "" };
 
 const DRAFT_KEY = "cinebookReduxBookingDraft";
+const getLocalDate = () => {
+  const date = new Date();
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+};
 
 const getInitialState = () => {
   const base = {
     selectedMovie: null,
     selectedTheatre: null,
     selectedShow: null,
+    selectedDate: getLocalDate(),
     selectedSeats: [],
     customer: emptyCustomer,
     payment: emptyPayment,
@@ -24,6 +30,7 @@ const getInitialState = () => {
       selectedMovie: saved.selectedMovie ?? null,
       selectedTheatre: saved.selectedTheatre ?? null,
       selectedShow: saved.selectedShow ?? null,
+      selectedDate: /^\d{4}-\d{2}-\d{2}$/.test(saved.selectedDate || "") ? saved.selectedDate : getLocalDate(),
       selectedSeats: Array.isArray(saved.selectedSeats) ? saved.selectedSeats : [],
       customer: { ...emptyCustomer, ...(saved.customer || {}) },
       payment: emptyPayment,
@@ -52,6 +59,11 @@ const bookingSlice = createSlice({
     },
     selectShow(state, action) {
       state.selectedShow = action.payload;
+      state.selectedSeats = [];
+    },
+    selectDate(state, action) {
+      state.selectedDate = action.payload;
+      state.selectedShow = null;
       state.selectedSeats = [];
     },
     selectSeat(state, action) {
@@ -97,6 +109,7 @@ export const {
   selectMovie,
   selectTheatre,
   selectShow,
+  selectDate,
   selectSeat,
   removeSeat,
   updateCustomer,

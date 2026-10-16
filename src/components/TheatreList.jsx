@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import useBooking from "../hooks/useBooking";
-import { isTheatreAvailable } from "../utils/availability";
-import { fetchTheatres } from "../api/movieApi";
+import { fetchShows, fetchTheatres } from "../api/movieApi";
+import { API_ENABLED } from "../api/apiClient";
 
 function TheatreList({ onContinue, onBack }) {
-  const { selectedMovie, selectedTheatre, selectTheatre } = useBooking();
+  const { selectedTheatre, selectTheatre } = useBooking();
   const [theatres, setTheatres] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,8 +15,10 @@ function TheatreList({ onContinue, onBack }) {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchTheatres();
-        setTheatres(data);
+        const [data, scheduledShows] = await Promise.all([fetchTheatres(), fetchShows()]);
+        setTheatres(API_ENABLED
+          ? data.filter((theatre) => scheduledShows.some((show) => show.theatreId == null || String(show.theatreId) === String(theatre.id)))
+          : data);
       } catch (err) {
         setError(err.message || "Failed to load theatres");
       } finally {
@@ -27,19 +29,11 @@ function TheatreList({ onContinue, onBack }) {
     loadTheatres();
   }, []);
 
-  const availableTheatres = theatres.filter((theatre) =>
-    isTheatreAvailable(selectedMovie, theatre),
-  );
+  const availableTheatres = theatres;
 
   const handleContinue = () => {
     if (!selectedTheatre) {
       alert("Please select an available theatre first.");
-      return;
-    }
-
-    if (!isTheatreAvailable(selectedMovie, selectedTheatre)) {
-      alert("This theatre is no longer available for the selected movie. Please choose another theatre.");
-      selectTheatre(null);
       return;
     }
 
@@ -60,13 +54,13 @@ function TheatreList({ onContinue, onBack }) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink-secondary font-sans">
-              Step 2 of 6 · Live-style availability
+              Step 2 of 6 · Choose a venue
             </p>
             <h1 className="mt-2 font-serif text-4xl font-bold tracking-tight text-ink-primary sm:text-5xl">
               Choose a Theatre
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-ink-secondary font-sans sm:text-lg">
-              Availability is generated for your selected movie and stays consistent while you complete this booking.
+              Choose a venue to see its scheduled shows and current seat availability.
             </p>
           </div>
           <div className="rounded-2xl border border-canvas-muted bg-surface px-4 py-2.5 font-sans text-sm font-semibold text-ink-secondary shadow-cozy">
@@ -96,7 +90,7 @@ function TheatreList({ onContinue, onBack }) {
         ) : (
           <div className="mt-9 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {theatres.map((theatre) => {
-              const available = isTheatreAvailable(selectedMovie, theatre);
+              const available = true;
               const active = selectedTheatre?.id === theatre.id;
 
               return (
@@ -122,7 +116,7 @@ function TheatreList({ onContinue, onBack }) {
                         available ? "bg-surface border border-canvas-muted text-ink-primary shadow-sm" : "bg-canvas-muted text-ink-tertiary"
                       }`}
                     >
-                      {available ? "● Available" : "× Sold out"}
+                      {available ? "● Shows listed" : "× Unavailable"}
                     </span>
                   </div>
 

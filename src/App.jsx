@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -32,7 +32,6 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import GuestRoute from "./auth/GuestRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useAuth } from "./auth/useAuth";
-import { reserveSeats } from "./utils/availability";
 import { saveBooking } from "./utils/bookingStore";
 import { authorizePayment, createBooking } from "./api/bookingApi";
 import { API_ENABLED } from "./api/apiClient";
@@ -193,16 +192,15 @@ function CheckoutRoute() {
   const { user } = useAuth();
   const booking = useBooking();
   const { clearBooking } = booking;
+  const idempotencyKeyRef = useRef(null);
 
   const handleConfirm = useCallback(async () => {
     const {
       selectedMovie,
       selectedTheatre,
       selectedShow,
+      selectedDate,
       selectedSeats,
-      customer,
-      payment,
-      totalAmount,
     } = booking;
 
     if (
@@ -215,78 +213,57 @@ function CheckoutRoute() {
       return;
     }
 
-    // Seats reservation check
-    try {
-      reserveSeats(
-        selectedMovie,
-        selectedTheatre,
-        selectedShow,
-        selectedSeats,
-      );
-    } catch (err) {
-      console.warn("Seat reservation note:", err);
+    if (!API_ENABLED) {
+      throw new Error("The booking API is not configured. No ticket was issued.");
+    }
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = globalThis.crypto?.randomUUID?.() || `cinebook-${Date.now()}-${selectedMovie.id}`;
     }
 
-    const bookingId = `CB${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    const paymentRef = `PAY-${Date.now().toString(36).toUpperCase()}`;
-    const nowIso = new Date().toISOString();
+    const savedTicket = await createBooking({
+      movieId: selectedMovie.id,
+      theatre: selectedTheatre.name,
+      show: selectedShow.time,
+      showDate: selectedDate,
+      seats: [...new Set(selectedSeats)],
+      paymentMethod: "Demo confirmation",
+    }, idempotencyKeyRef.current);
+    const receipt = await authorizePayment({ bookingId: savedTicket.bookingId });
+    const demoConfirmed = receipt?.status === "demo_confirmed"
+      && receipt.paymentMode === "demo"
+      && receipt.bookingId === savedTicket.bookingId
+      && typeof receipt.reference === "string"
+      && receipt.reference.startsWith("DEMO-")
+      && Boolean(receipt.demoConfirmedAt);
+    const providerVerified = receipt?.status === "paid"
+      && receipt.bookingId === savedTicket.bookingId
+      && Boolean(receipt.reference && receipt.paymentProvider && receipt.providerTransactionId && receipt.paymentVerifiedAt);
+    if (!demoConfirmed && !providerVerified) {
+      throw new Error("No valid booking confirmation was received. Please try again.");
+    }
 
     const ticket = {
-      bookingId,
-      movieId: selectedMovie.id,
-      movie: selectedMovie.title,
-      movieImage: selectedMovie.image,
-      genre: selectedMovie.genre,
-      duration: selectedMovie.duration,
-      language: selectedMovie.language,
-      theatre: selectedTheatre.name,
-      theatreLocation: selectedTheatre.location,
-      theatreCity: selectedTheatre.city,
-      show: selectedShow.time,
-      format: selectedShow.format,
-      seats: selectedSeats,
-      customer: {
-        name: customer.name || user?.name || "Movie Goer",
-        email: customer.email || user?.email || "guest@cinebook.com",
-        phone: customer.phone || user?.phone || "9876543210",
-      },
-      amount: totalAmount,
-      paymentMethod: payment?.method || "UPI",
-      status: "paid",
-      paymentMode: "simulated",
-      source: "demo-local",
-      paymentReference: `DEMO-${paymentRef}`,
-      bookedAt: nowIso,
-      paidAt: nowIso,
+      ...savedTicket,
+      bookingId: receipt.bookingId,
+      showDate: savedTicket.showDate || selectedDate,
+      movieImage: savedTicket.movieImage || selectedMovie.image,
+      format: savedTicket.format || selectedShow.format,
+      status: demoConfirmed ? "demo_confirmed" : "paid",
+      paymentMode: demoConfirmed ? "demo" : "provider",
+      paymentReference: receipt.reference,
+      ...(demoConfirmed
+        ? { demoReference: receipt.reference, demoConfirmedAt: receipt.demoConfirmedAt }
+        : {
+            paymentProvider: receipt.paymentProvider,
+            providerTransactionId: receipt.providerTransactionId,
+            paymentVerifiedAt: receipt.paymentVerifiedAt,
+            paidAt: receipt.paidAt,
+          }),
     };
-
-    // Always save locally FIRST so the ticket is guaranteed available
-    const userEmail = user?.email || ticket.customer.email;
-    saveBooking(userEmail, ticket);
-
-    // Clear booking state and navigate immediately — dummy payment always succeeds
+    saveBooking(user?.email || ticket.customer?.email, ticket);
+    idempotencyKeyRef.current = null;
     clearBooking();
-    navigate("/bookings", {
-      replace: true,
-      state: { newBookingId: ticket.bookingId },
-    });
-
-    // Best-effort API sync (fire-and-forget, never blocks the user)
-    if (API_ENABLED) {
-      try {
-        const idempotencyKey = `${user?.id || "guest"}-${selectedMovie.id}-${selectedSeats.slice().sort().join(",")}-${Date.now()}`;
-        const savedTicket = await createBooking(ticket, idempotencyKey);
-        if (savedTicket?.bookingId) {
-          try {
-            await authorizePayment({ bookingId: savedTicket.bookingId });
-          } catch (payErr) {
-            console.warn("Payment authorization fallback (dummy mode):", payErr);
-          }
-        }
-      } catch (apiErr) {
-        console.warn("API booking sync fallback (dummy mode):", apiErr);
-      }
-    }
+    navigate("/bookings", { replace: true, state: { newBookingId: ticket.bookingId } });
   }, [booking, clearBooking, navigate, user]);
 
   return (

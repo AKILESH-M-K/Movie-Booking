@@ -41,7 +41,7 @@ beforeEach(() => {
 // ─────────────────────────────────────────────────────
 
 describe("Movie CRUD authorization", () => {
-  test("createMovie calls the API and falls back gracefully on 403", async () => {
+  test("createMovie propagates server authorization failures", async () => {
     apiClient.post.mockRejectedValue({
       response: {
         status: 403,
@@ -50,16 +50,13 @@ describe("Movie CRUD authorization", () => {
       message: "Request failed with status code 403",
     });
 
-    // movieApi.js createMovie has a local fallback — it logs a warning and
-    // returns a local movie. The backend enforces RBAC; the frontend remains
-    // resilient. Verify the API was actually called with the correct payload.
-    const result = await createMovie({ title: "Hacker Movie" });
+    await expect(createMovie({ title: "Hacker Movie" })).rejects.toMatchObject({
+      response: { status: 403 },
+    });
     expect(apiClient.post).toHaveBeenCalledWith("/movies", { title: "Hacker Movie" });
-    // Fallback returns a local object (not persisted on server)
-    expect(result.title).toBe("Hacker Movie");
   });
 
-  test("deleteMovie calls the API and falls back gracefully on 403", async () => {
+  test("deleteMovie propagates server authorization failures", async () => {
     apiClient.delete.mockRejectedValue({
       response: {
         status: 403,
@@ -68,10 +65,10 @@ describe("Movie CRUD authorization", () => {
       message: "Request failed with status code 403",
     });
 
-    const result = await deleteMovie(101);
+    await expect(deleteMovie(101)).rejects.toMatchObject({
+      response: { status: 403 },
+    });
     expect(apiClient.delete).toHaveBeenCalledWith("/movies/101");
-    // Fallback returns a local result (not persisted on server)
-    expect(result.id).toBe(101);
   });
 
   test("fetchMovies (GET) is accessible without admin role", async () => {

@@ -17,7 +17,7 @@ import QrTicket from "../components/QrTicket";
 
 function mergeBookings(serverBookings, localBookings) {
   const fingerprint = (booking) =>
-    [booking.movieId || booking.movie, booking.theatre, booking.show, (booking.seats || []).slice().sort().join(",")]
+    [booking.movieId || booking.movie, booking.theatre, booking.showDate, booking.show, (booking.seats || []).slice().sort().join(",")]
       .map((value) => String(value || "").trim().toLowerCase())
       .join("|");
   const merged = [...(serverBookings || [])];
@@ -27,6 +27,21 @@ function mergeBookings(serverBookings, localBookings) {
     }
   }
   return merged.sort((a, b) => (b.bookedAt || "").localeCompare(a.bookedAt || ""));
+}
+
+function hasVerifiedPayment(booking) {
+  return booking.status === "paid" && Boolean(
+    booking.paymentProvider && booking.providerTransactionId && booking.paymentVerifiedAt,
+  );
+}
+
+function hasDemoConfirmation(booking) {
+  return booking.status === "demo_confirmed" && booking.paymentMode === "demo"
+    && Boolean(booking.demoConfirmedAt && booking.demoReference);
+}
+
+function canShowTicket(booking) {
+  return hasVerifiedPayment(booking) || hasDemoConfirmation(booking);
 }
 
 function formatDateTime(value) {
@@ -190,8 +205,8 @@ function Bookings() {
           <div className="ticket-success" role="status">
             <span className="ticket-success-icon" aria-hidden="true">✓</span>
             <div>
-              <strong>Demo booking confirmed. Your ticket is ready.</strong>
-              <p>This prototype does not charge money. Scan the QR to read ticket details.</p>
+              <strong>Payment was verified by the server. Your ticket is ready.</strong>
+              <p>Scan the QR to read ticket data; it does not contain a website URL.</p>
             </div>
           </div>
         )}
@@ -236,8 +251,12 @@ function Bookings() {
                       className={`rounded-full px-4 py-1.5 font-sans text-xs font-bold ${
                         booking.status === "cancelled"
                           ? "bg-red-100 text-red-800"
-                          : booking.status === "paid"
+                          : hasVerifiedPayment(booking)
                             ? "bg-brand-light text-brand"
+                            : hasDemoConfirmation(booking)
+                              ? "bg-pink-100 text-pink-800"
+                            : booking.status === "paid"
+                              ? "bg-red-100 text-red-800"
                             : booking.status === "expired"
                               ? "bg-orange-100 text-orange-800"
                               : booking.status === "pending_payment"
@@ -245,7 +264,7 @@ function Bookings() {
                                 : "bg-canvas text-ink-secondary"
                       }`}
                     >
-                      {booking.status === "cancelled" ? "Cancelled" : booking.status === "paid" ? "✓ Ticket confirmed · demo" : booking.status === "expired" ? "Expired" : booking.status === "pending_payment" ? "⏳ Pending Payment" : "Confirmed"}
+                      {booking.status === "cancelled" ? "Cancelled" : hasVerifiedPayment(booking) ? "✓ Payment verified · ticket ready" : hasDemoConfirmation(booking) ? "Demo confirmed · no charge" : booking.status === "paid" ? "Payment status unverified" : booking.status === "expired" ? "Expired" : booking.status === "pending_payment" ? "⏳ Pending Confirmation" : "Unverified"}
                     </span>
                   </header>
                   <div className="grid gap-8 bg-gradient-to-br from-white via-pink-50/50 to-rose-100/60 p-7 sm:p-8 lg:grid-cols-[1fr_260px]">
@@ -255,7 +274,7 @@ function Bookings() {
                         <div className="min-w-0">
                           <p className="font-sans text-xs font-bold uppercase tracking-[0.16em] text-pink-700">Your movie night</p>
                           <h2 className="mt-1 font-serif text-3xl font-bold tracking-tight text-ink-primary">{booking.movie}</h2>
-                          <p className="mt-2 font-sans text-base font-medium text-ink-secondary">{booking.theatre} · {booking.show}</p>
+                          <p className="mt-2 font-sans text-base font-medium text-ink-secondary">{booking.theatre} · {booking.showDate || "Date unavailable"} · {booking.show}</p>
                         </div>
                       </div>
                       <dl className="mt-7 grid gap-4 sm:grid-cols-2">
@@ -264,7 +283,7 @@ function Bookings() {
                           value={booking.seats?.join(", ")}
                           highlight
                         />
-                        <Info label="Amount" value={`₹${booking.amount}`} />
+                        <Info label={hasDemoConfirmation(booking) ? "Display amount · no charge" : "Amount"} value={`₹${booking.amount}`} />
                         <Info label="Payment" value={booking.paymentMethod} />
                         <Info
                           label="Booked at"
@@ -297,11 +316,11 @@ function Bookings() {
                       </div>
                     </div>
                     <aside className="rounded-2xl border border-dashed border-pink-300 bg-white/85 p-5 text-center flex flex-col items-center justify-center shadow-cozy">
-                      {booking.status === "paid" ? (
+                      {canShowTicket(booking) ? (
                         <QrTicket booking={booking} />
                       ) : (
                         <p className="font-sans text-xs font-semibold leading-6 text-ink-secondary">
-                          Payment is still pending. Your QR ticket will appear once payment is complete.
+                          {booking.status === "paid" ? "Payment is not backed by a provider verification record. No ticket QR is available." : "Booking confirmation is still pending. A ticket QR will appear after the server confirms the demo booking."}
                         </p>
                       )}
                     </aside>

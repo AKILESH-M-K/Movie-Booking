@@ -33,10 +33,13 @@ export default function useMovies() {
   const filteredMovies = useMemo(() => {
     const search = searchTerm.toLowerCase().trim();
     return moviesData.filter((movie) => {
-      const title = movie.title?.toLowerCase() || "";
+      const searchableText = [movie.title, movie.genre, movie.language, movie.cast]
+        .filter((value) => typeof value === "string")
+        .join(" ")
+        .toLocaleLowerCase();
 
       return (
-        (!search || title.includes(search)) &&
+        (!search || searchableText.includes(search)) &&
         (selectedGenre === "All" || movie.genre === selectedGenre)
       );
     });

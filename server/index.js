@@ -21,13 +21,19 @@ dotenv.config({
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
 const NODE_ENV = process.env.NODE_ENV || "development";
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  (NODE_ENV !== "production"
-    ? "cinebook_dev_secret_key_minimum_32_characters_long_for_security"
-    : null);
+const PAYMENT_MODE = process.env.PAYMENT_MODE || (NODE_ENV === "production" ? "provider" : "demo");
+const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
+if (!["demo", "provider"].includes(PAYMENT_MODE)) {
+  console.error("PAYMENT_MODE must be either demo or provider.");
+  process.exit(1);
+}
+if (NODE_ENV === "production" && PAYMENT_MODE === "demo") {
+  console.error("FATAL: Demo payment confirmation is disabled in production.");
+  process.exit(1);
+}
+
+if (!JWT_SECRET || JWT_SECRET.length < 32 || /REPLACE_WITH|CHANGE_ME|YOUR_SECRET/i.test(JWT_SECRET)) {
   console.error(
     "FATAL: Set JWT_SECRET to a cryptographically random secret of at least 32 characters in server/.env",
   );
@@ -39,8 +45,21 @@ if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   process.exit(1);
 }
 
-const DB_PATH = path.join(__dirname, "..", "db.json");
+if (!["development", "test", "production"].includes(NODE_ENV)) {
+  console.error("NODE_ENV must be development, test, or production.");
+  process.exit(1);
+}
+
+const DB_PATH = process.env.DATABASE_PATH
+  ? path.resolve(process.env.DATABASE_PATH)
+  : path.join(__dirname, "..", "db.json");
+const DB_TEMPLATE_PATH = path.join(__dirname, "..", "db.json.example");
 const HOLD_DURATION_MS = 10 * 60 * 1000; // 10 minutes temporary seat hold
+
+if (!fs.existsSync(DB_PATH)) {
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+  fs.copyFileSync(DB_TEMPLATE_PATH, DB_PATH);
+}
 
 // --------------------------------------------------
 // SECURITY HEADERS & CORS
@@ -71,16 +90,24 @@ const configuredOrigins = process.env.CLIENT_ORIGIN
   ? process.env.CLIENT_ORIGIN.split(",").map((s) => s.trim())
   : defaultAllowedOrigins;
 
+if (NODE_ENV === "production" && !process.env.CLIENT_ORIGIN) {
+  console.error("FATAL: Set CLIENT_ORIGIN to the exact HTTPS frontend origin in production.");
+  process.exit(1);
+}
+if (NODE_ENV === "production" && configuredOrigins.includes("*")) {
+  console.error("FATAL: CLIENT_ORIGIN must not use '*' with credentialed CORS in production.");
+  process.exit(1);
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow server-to-server or tools with no origin header
       if (!origin) return callback(null, true);
-      if (
-        configuredOrigins.includes("*") ||
-        configuredOrigins.includes(origin) ||
-        defaultAllowedOrigins.includes(origin)
-      ) {
+      const allowed = NODE_ENV === "production"
+        ? configuredOrigins.includes(origin)
+        : configuredOrigins.includes("*") || configuredOrigins.includes(origin) || defaultAllowedOrigins.includes(origin);
+      if (allowed) {
         return callback(null, true);
       }
       return callback(new Error("Origin not allowed by CORS"));
@@ -155,6 +182,12 @@ const bookingLimiter = rateLimit({
   windowMs: 60000,
   max: 40,
   message: "Too many booking requests. Please wait a moment.",
+});
+
+const ticketVerifyLimiter = rateLimit({
+  windowMs: 60000,
+  max: 60,
+  message: "Too many ticket verification requests. Please try again shortly.",
 });
 
 // Request logger
@@ -242,8 +275,37 @@ function isValidSeat(seat) {
   return /^[A-F](?:[1-9]|10)$/.test(String(seat));
 }
 
+function currentBookingDate() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+}
+
+function isValidBookingDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function isAllowedBookingDate(value) {
+  if (!isValidBookingDate(value)) return false;
+  const today = currentBookingDate();
+  const maximum = new Date(`${today}T00:00:00.000Z`);
+  maximum.setUTCDate(maximum.getUTCDate() + 30);
+  return value >= today && value <= maximum.toISOString().slice(0, 10);
+}
+
+function getBookingShowDate(booking) {
+  if (isValidBookingDate(booking.showDate)) return booking.showDate;
+  if (booking.bookedAt) {
+    const bookedAt = new Date(booking.bookedAt);
+    if (Number.isFinite(bookedAt.getTime())) {
+      return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(bookedAt);
+    }
+  }
+  return "1970-01-01";
+}
+
 function isSeatActive(booking, now = Date.now()) {
-  if (booking.status === "paid" || booking.status === "confirmed") {
+  if (booking.status === "paid" || booking.status === "confirmed" || isDemoConfirmation(booking)) {
     return true;
   }
   if (booking.status === "pending_payment") {
@@ -254,7 +316,22 @@ function isSeatActive(booking, now = Date.now()) {
   return false;
 }
 
-function seatsConflict(db, movieId, theatre, show, seats, exceptId = null) {
+function isDemoConfirmation(booking) {
+  return booking.status === "demo_confirmed" && booking.paymentMode === "demo" && Boolean(booking.demoConfirmedAt && booking.demoReference);
+}
+
+function makeDemoReceipt(booking) {
+  return {
+    status: "demo_confirmed",
+    paymentMode: "demo",
+    bookingId: booking.bookingId,
+    amount: booking.amount,
+    reference: booking.demoReference,
+    demoConfirmedAt: booking.demoConfirmedAt,
+  };
+}
+
+function seatsConflict(db, movieId, theatre, show, seats, showDate, exceptId = null) {
   const now = Date.now();
   const seatsSet = new Set(seats.map(String));
 
@@ -265,8 +342,9 @@ function seatsConflict(db, movieId, theatre, show, seats, exceptId = null) {
     const matchesMovie = String(b.movieId) === String(movieId);
     const matchesTheatre = b.theatre.trim() === String(theatre).trim();
     const matchesShow = b.show.trim() === String(show).trim();
+    const matchesDate = getBookingShowDate(b) === String(showDate);
 
-    if (!matchesMovie || !matchesTheatre || !matchesShow) return false;
+    if (!matchesMovie || !matchesTheatre || !matchesShow || !matchesDate) return false;
 
     return b.seats.some((seat) => seatsSet.has(String(seat)));
   });
@@ -282,20 +360,41 @@ function getSelectedTheatre(db, theatre) {
   );
 }
 
-function getSelectedShow(db, show) {
+function getSelectedShow(db, show, theatreId) {
   if (!db.shows.length) return true;
 
-  return db.shows.find(
+  const selected = db.shows.find(
     (s) =>
       String(s.id) === String(show).trim() || s.time === String(show).trim(),
   );
+  if (!selected) return undefined;
+  return selected.theatreId == null || String(selected.theatreId) === String(theatreId)
+    ? selected
+    : undefined;
 }
 
-function calculateAmount(price, seats) {
+function calculateAmount(price, seats, selectedShow = null) {
+  const multiplier = Number(selectedShow?.priceMultiplier) || 1;
+  const basePrice = Math.round(price * multiplier);
   return seats.reduce(
-    (total, seat) => total + price + ("AB".includes(seat[0]) ? 50 : 0) + 25,
+    (total, seat) => total + basePrice + ("AB".includes(seat[0]) ? 50 : 0) + 25,
     0,
   );
+}
+
+function cancelBookingRecord(booking) {
+  const wasPaid = booking.status === "paid" && Boolean(
+    booking.paymentProvider && booking.providerTransactionId && booking.paymentVerifiedAt,
+  );
+  booking.status = "cancelled";
+  booking.cancelledAt = new Date().toISOString();
+  if (wasPaid) {
+    booking.refundStatus = "REFUND_REQUIRED";
+    booking.refundAmount = booking.amount;
+  } else {
+    delete booking.refundStatus;
+    delete booking.refundAmount;
+  }
 }
 
 function getCustomer(user) {
@@ -716,15 +815,21 @@ app.get("/shows", (_req, res, next) => {
 app.get("/availability", (req, res, next) => {
   try {
     const { movieId, theatre, show } = req.query;
+    const showDate = req.query.date || currentBookingDate();
 
-    if (!movieId || !theatre || !show) {
+    if (!movieId || !theatre || !show || !isAllowedBookingDate(showDate)) {
       return res.status(400).json({
-        message: "movieId, theatre, and show query parameters are required.",
+        message: "movieId, theatre, show, and a valid YYYY-MM-DD date are required.",
         code: "INVALID_QUERY",
       });
     }
 
     const db = readDB();
+    const selectedTheatre = getSelectedTheatre(db, theatre);
+    const selectedShow = selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
+    if (!selectedTheatre || !selectedShow) {
+      return res.status(400).json({ message: "The selected theatre/show combination is invalid.", code: "INVALID_SHOW" });
+    }
     const now = Date.now();
     const bookedSeats = [];
     const heldSeats = [];
@@ -733,9 +838,10 @@ app.get("/availability", (req, res, next) => {
       if (
         String(b.movieId) === String(movieId) &&
         b.theatre.trim() === String(theatre).trim() &&
-        b.show.trim() === String(show).trim()
+        b.show.trim() === String(show).trim() &&
+        getBookingShowDate(b) === showDate
       ) {
-        if (b.status === "paid" || b.status === "confirmed") {
+        if (b.status === "paid" || b.status === "confirmed" || isDemoConfirmation(b)) {
           bookedSeats.push(...b.seats);
         } else if (
           b.status === "pending_payment" &&
@@ -751,6 +857,7 @@ app.get("/availability", (req, res, next) => {
       movieId,
       theatre,
       show,
+      showDate,
       bookedSeats: [...new Set(bookedSeats)],
       heldSeats: [...new Set(heldSeats)],
     });
@@ -763,7 +870,7 @@ app.get("/availability", (req, res, next) => {
 // PUBLIC TICKET VERIFICATION (QR CHECK-IN)
 // --------------------------------------------------
 
-app.get("/tickets/verify/:bookingId", (req, res, next) => {
+app.get("/tickets/verify/:bookingId", ticketVerifyLimiter, (req, res, next) => {
   try {
     const { bookingId } = req.params;
     const db = readDB();
@@ -789,22 +896,28 @@ app.get("/tickets/verify/:bookingId", (req, res, next) => {
           movie: booking.movie,
           theatre: booking.theatre,
           show: booking.show,
+          showDate: booking.showDate || null,
           seats: booking.seats,
           status: "cancelled",
         },
       });
     }
 
-    if (booking.status !== "paid" && booking.status !== "confirmed") {
+    const verifiedProviderPayment = booking.status === "paid" && Boolean(
+      booking.paymentProvider && booking.providerTransactionId && booking.paymentVerifiedAt,
+    );
+    const validDemoConfirmation = PAYMENT_MODE === "demo" && isDemoConfirmation(booking);
+    if (!verifiedProviderPayment && !validDemoConfirmation) {
       return res.status(200).json({
         valid: false,
-        reason: "Ticket payment is not complete or hold expired.",
+        reason: "This booking has no valid payment confirmation and is not valid for entry.",
         status: booking.status,
         booking: {
           bookingId: booking.bookingId,
           movie: booking.movie,
           theatre: booking.theatre,
           show: booking.show,
+          showDate: booking.showDate || null,
           seats: booking.seats,
           status: booking.status,
         },
@@ -819,6 +932,7 @@ app.get("/tickets/verify/:bookingId", (req, res, next) => {
       valid: true,
       booking: {
         bookingId: booking.bookingId,
+        movieId: booking.movieId,
         movie: booking.movie,
         movieImage: booking.movieImage || matchedMovie?.image || null,
         duration: booking.duration || matchedMovie?.duration || "2h 30m",
@@ -828,15 +942,13 @@ app.get("/tickets/verify/:bookingId", (req, res, next) => {
         theatreLocation: booking.theatreLocation || "Central Multiplex",
         theatreCity: booking.theatreCity || "Coimbatore",
         show: booking.show,
+        showDate: booking.showDate || null,
         format: booking.format || "Standard",
         seats: booking.seats,
-        customer: booking.customer,
-        amount: booking.amount,
-        paymentMethod: booking.paymentMethod,
-        paymentReference: booking.paymentReference,
-        bookedAt: booking.bookedAt,
-        paidAt: booking.paidAt,
         status: booking.status,
+        paymentMode: validDemoConfirmation ? "demo" : "provider",
+        demoReference: validDemoConfirmation ? booking.demoReference : undefined,
+        demoConfirmedAt: validDemoConfirmation ? booking.demoConfirmedAt : undefined,
       },
     });
   } catch (err) {
@@ -891,6 +1003,7 @@ app.get("/bookings/:id", auth, (req, res, next) => {
 app.post("/bookings", auth, bookingLimiter, async (req, res, next) => {
   try {
     const { movieId, theatre, show, seats, paymentMethod } = req.body || {};
+    const showDate = req.body?.showDate || currentBookingDate();
 
     if (
       movieId === undefined ||
@@ -904,7 +1017,8 @@ app.post("/bookings", auth, bookingLimiter, async (req, res, next) => {
       !seats.every(isValidSeat) ||
       typeof paymentMethod !== "string" ||
       !paymentMethod.trim() ||
-      paymentMethod.trim().length > 40
+      paymentMethod.trim().length > 40 ||
+      !isAllowedBookingDate(showDate)
     ) {
       return res.status(400).json({
         message: "Booking details are incomplete or invalid.",
@@ -944,13 +1058,13 @@ app.post("/bookings", auth, bookingLimiter, async (req, res, next) => {
       }
 
       const selectedTheatre = getSelectedTheatre(db, theatre);
-      const selectedShow = getSelectedShow(db, show);
+      const selectedShow = selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
 
       if (!selectedTheatre || !selectedShow) {
         return { error: "Selected theatre or show is invalid.", status: 400 };
       }
 
-      if (seatsConflict(db, movie.id, theatre, show, uniqueSeats)) {
+      if (seatsConflict(db, movie.id, theatre, show, uniqueSeats, showDate)) {
         return {
           error:
             "One or more seats have already been booked or held by another customer.",
@@ -966,7 +1080,7 @@ app.post("/bookings", auth, bookingLimiter, async (req, res, next) => {
         };
       }
 
-      const amount = calculateAmount(price, uniqueSeats);
+      const amount = calculateAmount(price, uniqueSeats, selectedShow);
       const expiresAt = new Date(Date.now() + HOLD_DURATION_MS).toISOString();
 
       const ticket = {
@@ -980,6 +1094,8 @@ app.post("/bookings", auth, bookingLimiter, async (req, res, next) => {
         language: movie.language,
         theatre: theatre.trim().slice(0, 160),
         show: show.trim().slice(0, 80),
+        showDate,
+        format: selectedShow?.format || "Standard",
         seats: uniqueSeats,
         customer: getCustomer(req.user),
         amount,
@@ -1014,6 +1130,7 @@ app.post("/bookings", auth, bookingLimiter, async (req, res, next) => {
 app.put("/bookings/:id", auth, async (req, res, next) => {
   try {
     const { theatre, show, seats, paymentMethod } = req.body || {};
+    const requestedShowDate = req.body?.showDate;
 
     if (
       typeof theatre !== "string" ||
@@ -1027,7 +1144,8 @@ app.put("/bookings/:id", auth, async (req, res, next) => {
       new Set(seats.map(String)).size !== seats.length ||
       typeof paymentMethod !== "string" ||
       !paymentMethod.trim() ||
-      paymentMethod.trim().length > 40
+      paymentMethod.trim().length > 40 ||
+      (requestedShowDate !== undefined && !isAllowedBookingDate(requestedShowDate))
     ) {
       return res.status(400).json({
         message: "Invalid booking details.",
@@ -1052,15 +1170,15 @@ app.put("/bookings/:id", auth, async (req, res, next) => {
         };
       }
 
-      if (booking.status === "cancelled") {
+      if (booking.status !== "pending_payment") {
         return {
-          error: "Cancelled bookings cannot be modified.",
-          status: 400,
+          error: "Only pending-payment holds can be changed; finalized bookings are immutable.",
+          status: 409,
         };
       }
 
       const selectedTheatre = getSelectedTheatre(db, theatre);
-      const selectedShow = getSelectedShow(db, show);
+      const selectedShow = selectedTheatre && getSelectedShow(db, show, selectedTheatre.id);
 
       if (!selectedTheatre || !selectedShow) {
         return { error: "Selected theatre or show is invalid.", status: 400 };
@@ -1073,6 +1191,7 @@ app.put("/bookings/:id", auth, async (req, res, next) => {
           theatre,
           show,
           uniqueSeats,
+          requestedShowDate || booking.showDate || currentBookingDate(),
           booking.bookingId,
         )
       ) {
@@ -1094,10 +1213,12 @@ app.put("/bookings/:id", auth, async (req, res, next) => {
 
       booking.theatre = theatre.trim().slice(0, 160);
       booking.show = show.trim().slice(0, 80);
+      booking.showDate = requestedShowDate || booking.showDate || currentBookingDate();
+      booking.format = selectedShow?.format || booking.format || "Standard";
       booking.seats = uniqueSeats;
       booking.customer = getCustomer(req.user);
       booking.paymentMethod = paymentMethod.trim();
-      booking.amount = calculateAmount(price, uniqueSeats);
+      booking.amount = calculateAmount(price, uniqueSeats, selectedShow);
       booking.updatedAt = new Date().toISOString();
 
       writeDB(db);
@@ -1166,10 +1287,7 @@ app.patch("/bookings/:id", auth, async (req, res, next) => {
       }
 
       if (status === "cancelled") {
-        booking.status = "cancelled";
-        booking.cancelledAt = new Date().toISOString();
-        booking.refundStatus = "REFUND_PROCESSED";
-        booking.refundAmount = booking.amount;
+        cancelBookingRecord(booking);
       }
 
       booking.updatedAt = new Date().toISOString();
@@ -1217,10 +1335,7 @@ app.delete("/bookings/:id", auth, async (req, res, next) => {
         };
       }
 
-      booking.status = "cancelled";
-      booking.cancelledAt = new Date().toISOString();
-      booking.refundStatus = "REFUND_PROCESSED";
-      booking.refundAmount = booking.amount;
+      cancelBookingRecord(booking);
       booking.updatedAt = new Date().toISOString();
 
       writeDB(db);
@@ -1262,24 +1377,38 @@ app.post(
       const result = await executeWithLock(() => {
         const db = readDB();
         const booking = db.bookings.find(
-          (b) =>
-            b.bookingId.toLowerCase() === bookingId.toLowerCase() &&
-            (b.userId === req.user.id || req.user.role === "admin" || !b.userId || true),
+          (b) => b.bookingId.toLowerCase() === bookingId.toLowerCase(),
         );
 
         if (!booking) {
           return { error: "Booking not found.", status: 404 };
         }
+        if (booking.userId !== req.user.id && req.user.role !== "admin") {
+          return { error: "You cannot authorize payment for another user's booking.", status: 403 };
+        }
 
-        // Idempotent replay: if already paid, return receipt
+        if (booking.status === "demo_confirmed") {
+          if (!isDemoConfirmation(booking)) {
+            return { error: "This booking has an invalid demo confirmation record.", status: 409 };
+          }
+          return { receipt: makeDemoReceipt(booking) };
+        }
+
+        // Only a provider-verified transaction can be returned as paid.
         if (booking.status === "paid") {
+          if (!booking.paymentProvider || !booking.providerTransactionId || !booking.paymentVerifiedAt) {
+            return { error: "This booking has no verifiable payment-provider transaction.", status: 409 };
+          }
           return {
             receipt: {
               status: "paid",
               bookingId: booking.bookingId,
               amount: booking.amount,
               reference: booking.paymentReference,
-              paidAt: booking.paidAt,
+              paymentProvider: booking.paymentProvider,
+              providerTransactionId: booking.providerTransactionId,
+              paymentVerifiedAt: booking.paymentVerifiedAt,
+              paidAt: booking.paymentVerifiedAt,
             },
           };
         }
@@ -1301,35 +1430,32 @@ app.post(
           }
         } else if (booking.status !== "confirmed") {
           return {
-            error: "Only pending or confirmed bookings can be paid for.",
+            error: "Only pending or confirmed bookings can be processed.",
             status: 400,
           };
         }
 
-        // Generate payment transaction reference and finalize booking
-        const reference = `PAY-${crypto.randomBytes(6).toString("hex").toUpperCase()}`;
-        const paidAt = new Date().toISOString();
+        if (PAYMENT_MODE === "demo") {
+          const confirmedAt = new Date().toISOString();
+          booking.status = "demo_confirmed";
+          booking.paymentMode = "demo";
+          booking.demoReference = `DEMO-${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
+          booking.demoConfirmedAt = confirmedAt;
+          booking.updatedAt = confirmedAt;
+          writeDB(db);
+          return { receipt: makeDemoReceipt(booking) };
+        }
 
-        booking.status = "paid";
-        booking.paymentReference = reference;
-        booking.paidAt = paidAt;
-        booking.updatedAt = paidAt;
-
-        writeDB(db);
-
+        // Provider mode stays fail-closed until a real gateway is integrated.
         return {
-          receipt: {
-            status: "paid",
-            bookingId: booking.bookingId,
-            amount: booking.amount,
-            reference,
-            paidAt,
-          },
+          error: "A real payment provider is not configured. The seat hold remains pending and no payment was taken.",
+          status: 503,
+          code: "PAYMENT_PROVIDER_UNAVAILABLE",
         };
       });
 
       if (result.error) {
-        return res.status(result.status).json({ message: result.error });
+        return res.status(result.status).json({ message: result.error, code: result.code });
       }
 
       res.json(result.receipt);

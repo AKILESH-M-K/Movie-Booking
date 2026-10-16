@@ -2,146 +2,52 @@ import { apiClient, API_ENABLED } from "./apiClient";
 import localMovies from "../data/movies";
 
 /**
- * Universal CRUD Service with automatic console logging for all operations:
+ * Reusable CRUD helpers for the movie catalog operations:
  * - GET (Read all or Read by ID)
  * - POST (Create)
  * - UPDATE / PUT / PATCH (Update)
  * - DELETE (Delete / Remove)
  */
 
-const LOG_STYLES = {
-  header:
-    "background: #1e293b; color: #38bdf8; font-weight: bold; font-size: 12px; padding: 3px 8px; border-radius: 4px;",
-  get: "background: #0284c7; color: #ffffff; font-weight: bold; padding: 2px 6px; border-radius: 3px;",
-  post: "background: #16a34a; color: #ffffff; font-weight: bold; padding: 2px 6px; border-radius: 3px;",
-  update:
-    "background: #d97706; color: #ffffff; font-weight: bold; padding: 2px 6px; border-radius: 3px;",
-  delete:
-    "background: #dc2626; color: #ffffff; font-weight: bold; padding: 2px 6px; border-radius: 3px;",
-  success: "color: #16a34a; font-weight: bold;",
-};
+
 
 /**
  * Log helper that outputs to browser console with styling and to Node terminal cleanly.
  */
-function logCrud(operation, endpoint, details, result) {
-  const opUpper = operation.toUpperCase();
-  const isBrowser = typeof window !== "undefined";
-
-  if (isBrowser) {
-    const style = LOG_STYLES[operation.toLowerCase()] || LOG_STYLES.header;
-    console.group(
-      `%c[CRUD ${opUpper}]%c ${endpoint}`,
-      style,
-      "color: inherit; font-weight: normal;",
-    );
-    if (details !== undefined)
-      console.log("➡️ Request Data / Params:", details);
-    if (result !== undefined) console.log("⬅️ Response / Result:", result);
-    console.groupEnd();
-  } else {
-    console.log(`\n================== [CRUD ${opUpper}] ==================`);
-    console.log(`Endpoint: ${endpoint}`);
-    if (details !== undefined)
-      console.log("Request Payload:", JSON.stringify(details, null, 2));
-    if (result !== undefined)
-      console.log("Response Data:", JSON.stringify(result, null, 2));
-    console.log("====================================================");
-  }
-}
-
 // ----------------------------------------------------
-// 1. GET (Read all or Read single)
+// CRUD helpers
 // ----------------------------------------------------
 export async function crudGet(endpoint, params = null) {
-  try {
-    const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-    const response = await apiClient.get(url, { params });
-    logCrud("get", url, params, response.data);
-    return response.data;
-  } catch (error) {
-    console.error(
-      `❌ [CRUD GET FAILED] ${endpoint}:`,
-      error?.response?.data || error.message,
-    );
-    throw error;
-  }
+  const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const response = await apiClient.get(url, { params });
+  return response.data;
 }
 
 export async function crudGetById(endpoint, id) {
-  try {
-    const cleanEndpoint = endpoint.replace(/\/+$/, "");
-    const url = `${cleanEndpoint}/${encodeURIComponent(id)}`;
-    const response = await apiClient.get(url);
-    logCrud("get", url, { id }, response.data);
-    return response.data;
-  } catch (error) {
-    console.error(
-      `❌ [CRUD GET BY ID FAILED] ${endpoint}/${id}:`,
-      error?.response?.data || error.message,
-    );
-    throw error;
-  }
+  const cleanEndpoint = endpoint.replace(/\/+$/, "");
+  const url = `${cleanEndpoint}/${encodeURIComponent(id)}`;
+  const response = await apiClient.get(url);
+  return response.data;
 }
 
-// ----------------------------------------------------
-// 2. POST (Create)
-// ----------------------------------------------------
 export async function crudPost(endpoint, data) {
-  try {
-    const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-    const response = await apiClient.post(url, data);
-    logCrud("post", url, data, response.data);
-    return response.data;
-  } catch (error) {
-    console.error(
-      `❌ [CRUD POST FAILED] ${endpoint}:`,
-      error?.response?.data || error.message,
-    );
-    throw error;
-  }
+  const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const response = await apiClient.post(url, data);
+  return response.data;
 }
 
-// ----------------------------------------------------
-// 3. UPDATE / PUT / PATCH (Update)
-// ----------------------------------------------------
 export async function crudUpdate(endpoint, id, data, method = "PUT") {
-  try {
-    const cleanEndpoint = endpoint.replace(/\/+$/, "");
-    const url = `${cleanEndpoint}/${encodeURIComponent(id)}`;
-    const response = await apiClient.request({
-      url,
-      method: method.toUpperCase(),
-      data,
-    });
-    logCrud("update", `${method.toUpperCase()} ${url}`, data, response.data);
-    return response.data;
-  } catch (error) {
-    console.error(
-      `❌ [CRUD UPDATE FAILED] ${endpoint}/${id}:`,
-      error?.response?.data || error.message,
-    );
-    throw error;
-  }
+  const cleanEndpoint = endpoint.replace(/\/+$/, "");
+  const url = `${cleanEndpoint}/${encodeURIComponent(id)}`;
+  const response = await apiClient.request({ url, method: method.toUpperCase(), data });
+  return response.data;
 }
 
-// ----------------------------------------------------
-// 4. DELETE (Remove / Cancel)
-// ----------------------------------------------------
 export async function crudDelete(endpoint, id) {
-  try {
-    const cleanEndpoint = endpoint.replace(/\/+$/, "");
-    const url = `${cleanEndpoint}/${encodeURIComponent(id)}`;
-    const response = await apiClient.delete(url);
-    logCrud("delete", url, { id }, response.data);
-    return response.data;
-  } catch (error) {
-    console.error(
-      `❌ [CRUD DELETE FAILED] ${endpoint}/${id}:`,
-      error?.response?.data || error.message,
-    );
-    throw error;
-  }
+  const cleanEndpoint = endpoint.replace(/\/+$/, "");
+  const url = `${cleanEndpoint}/${encodeURIComponent(id)}`;
+  const response = await apiClient.delete(url);
+  return response.data;
 }
 
 // ----------------------------------------------------
@@ -360,8 +266,7 @@ export async function runCrudDemo() {
     );
 
     return results;
-  } catch (err) {
-    console.error("❌ [CRUD DEMO FAILED]:", err);
+  } catch {
     return results;
   }
 }

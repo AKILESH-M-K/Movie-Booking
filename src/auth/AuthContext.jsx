@@ -34,6 +34,11 @@ function getAccounts() {
 
 function getSessionUser() {
   try {
+    if (import.meta.env.PROD && !API_ENABLED) {
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
     if (API_ENABLED && !sessionStorage.getItem(TOKEN_KEY)) return null;
     const value = sessionStorage.getItem(SESSION_KEY);
     return value ? JSON.parse(value) : null;
@@ -160,6 +165,9 @@ export function AuthProvider({ children }) {
         };
       }
     }
+    if (import.meta.env.PROD) {
+      return { success: false, error: "Secure sign-in is unavailable because the production API is not configured." };
+    }
     const accounts = getAccounts();
     const account = accounts.find((item) => item.email === email);
 
@@ -225,6 +233,9 @@ export function AuthProvider({ children }) {
         };
       }
     }
+    if (import.meta.env.PROD) {
+      return { success: false, error: "Account creation is unavailable because the production API is not configured." };
+    }
     const accounts = getAccounts();
     const email = normalizeEmail(userData.email);
 
@@ -280,6 +291,9 @@ export function AuthProvider({ children }) {
         }
       }
 
+      if (import.meta.env.PROD) {
+        return { success: false, error: "Profile updates are unavailable because the production API is not configured." };
+      }
       const accounts = getAccounts();
       const updatedAccount = accounts.find((item) => item.email === user.email);
 

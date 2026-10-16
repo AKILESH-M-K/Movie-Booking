@@ -38,9 +38,9 @@ function randomFromKey(key) {
   return hashString(key) / 4294967296;
 }
 
-export function getSelectionKey(movie, theatre, show) {
+export function getSelectionKey(movie, theatre, show, date = "") {
   if (!movie?.id || !theatre?.id || !show?.id) return null;
-  return `${movie.id}:${theatre.id}:${show.id}`;
+  return `${movie.id}:${theatre.id}:${show.id}:${date || "undated"}`;
 }
 
 export function isTheatreAvailable(movie, theatre) {
@@ -53,8 +53,8 @@ export function isShowAvailable(movie, theatre, show) {
   return randomFromKey(`show:${movie.id}:${theatre.id}:${show.id}`) > 0.18;
 }
 
-export function getBookedSeats(movie, theatre, show) {
-  const key = getSelectionKey(movie, theatre, show);
+export function getBookedSeats(movie, theatre, show, date = "") {
+  const key = getSelectionKey(movie, theatre, show, date);
   if (!key) return [];
 
   const saved = readBookedSeats();
@@ -67,15 +67,15 @@ export function getBookedSeats(movie, theatre, show) {
   return [...new Set([...generated, ...persisted])];
 }
 
-export function reserveSeats(movie, theatre, show, requestedSeats) {
-  const key = getSelectionKey(movie, theatre, show);
+export function reserveSeats(movie, theatre, show, requestedSeats, date = "") {
+  const key = getSelectionKey(movie, theatre, show, date);
   if (!key) return { success: false, conflicts: requestedSeats };
 
   const validSeatIds = new Set(seats.map((seat) => seat.id));
   const invalid = requestedSeats.filter((seat) => !validSeatIds.has(seat));
   if (invalid.length) return { success: false, conflicts: invalid };
 
-  const booked = getBookedSeats(movie, theatre, show);
+  const booked = getBookedSeats(movie, theatre, show, date);
   const conflicts = requestedSeats.filter((seat) => booked.includes(seat));
 
   if (conflicts.length) {

@@ -1,5 +1,5 @@
 // Client-side booking history. This is a local storage store supporting full
-// CRUD operations (GET, POST, UPDATE, DELETE) with console logging.
+// CRUD operations (GET, POST, UPDATE, DELETE) without logging stored ticket data.
 
 const LEGACY_KEY_PREFIX = "cinebookBooking:";
 const HISTORY_KEY_PREFIX = "cinebookBookings:";
@@ -17,10 +17,8 @@ export function getBookings(email) {
     const value = localStorage.getItem(historyKey(email));
     const parsed = value ? JSON.parse(value) : [];
     const list = Array.isArray(parsed) ? parsed : [];
-    console.log(`📥 [LOCAL STORE GET /bookings] Bookings for ${email}:`, list);
     return list;
-  } catch (err) {
-    console.error("[LOCAL STORE GET FAILED]:", err);
+  } catch {
     return [];
   }
 }
@@ -28,7 +26,6 @@ export function getBookings(email) {
 export function getBookingById(email, id) {
   const all = getBookings(email);
   const found = all.find((item) => item.bookingId === id) || null;
-  console.log(`📥 [LOCAL STORE GET /bookings/${id}] Booking:`, found);
   return found;
 }
 
@@ -48,8 +45,8 @@ export function findAnyBookingById(id) {
         }
       }
     }
-  } catch (err) {
-    console.warn("findAnyBookingById error:", err);
+  } catch {
+    // Ignore malformed local entries and leave the ticket unresolved.
   }
   return null;
 }
@@ -58,15 +55,12 @@ export function findAnyBookingById(id) {
 // 2. POST (Create / Save)
 // ----------------------------------------------------
 export function saveBooking(email, booking) {
-  console.log(`📤 [LOCAL STORE POST /bookings] Creating booking for ${email}:`, booking);
   const existing = getBookings(email);
   const next = [booking, ...existing.filter((item) => item.bookingId !== booking.bookingId)];
   try {
     localStorage.setItem(historyKey(email), JSON.stringify(next));
-    console.log(`✅ [LOCAL STORE POST /bookings] Successfully stored booking:`, booking);
     return true;
-  } catch (err) {
-    console.error("[LOCAL STORE POST FAILED]:", err);
+  } catch {
     return false;
   }
 }
@@ -77,7 +71,6 @@ export const createBooking = saveBooking;
 // 3. UPDATE / PUT / PATCH (Update)
 // ----------------------------------------------------
 export function updateBooking(email, id, updatedFields) {
-  console.log(`🔄 [LOCAL STORE UPDATE /bookings/${id}] Updating booking for ${email}:`, updatedFields);
   const existing = getBookings(email);
   let updatedItem = null;
   const next = existing.map((item) => {
@@ -89,16 +82,13 @@ export function updateBooking(email, id, updatedFields) {
   });
 
   if (!updatedItem) {
-    console.warn(`⚠️ [LOCAL STORE UPDATE] Booking ${id} not found.`);
     return null;
   }
 
   try {
     localStorage.setItem(historyKey(email), JSON.stringify(next));
-    console.log(`✅ [LOCAL STORE UPDATE /bookings/${id}] Booking updated:`, updatedItem);
     return updatedItem;
-  } catch (err) {
-    console.error("[LOCAL STORE UPDATE FAILED]:", err);
+  } catch {
     return null;
   }
 }
@@ -107,7 +97,6 @@ export function updateBooking(email, id, updatedFields) {
 // 4. DELETE (Remove / Cancel)
 // ----------------------------------------------------
 export function deleteBooking(email, id, softDelete = true) {
-  console.log(`🗑️ [LOCAL STORE DELETE /bookings/${id}] Cancelling/deleting booking for ${email}...`);
   const existing = getBookings(email);
   let next;
   if (softDelete) {
@@ -122,10 +111,8 @@ export function deleteBooking(email, id, softDelete = true) {
 
   try {
     localStorage.setItem(historyKey(email), JSON.stringify(next));
-    console.log(`✅ [LOCAL STORE DELETE /bookings/${id}] Booking successfully deleted/cancelled.`);
     return true;
-  } catch (err) {
-    console.error("[LOCAL STORE DELETE FAILED]:", err);
+  } catch {
     return false;
   }
 }

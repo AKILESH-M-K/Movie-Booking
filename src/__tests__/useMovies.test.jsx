@@ -22,14 +22,25 @@ test("searches movies by title and filters by genre", async () => {
   await waitFor(() => expect(result.current.loading).toBe(false));
   expect(result.current.movies).toHaveLength(3);
 
-  act(() => result.current.searchMovies("leo"));
-  expect(result.current.movies.map((movie) => movie.title)).toEqual(["Leo"]);
+  act(() => result.current.searchMovies("interstellar"));
+  expect(result.current.movies.map((movie) => movie.title)).toEqual(["Interstellar"]);
 
   act(() => {
     result.current.searchMovies("");
     result.current.filterByGenre("Sci-Fi");
   });
   expect(result.current.movies.map((movie) => movie.title)).toEqual(["Interstellar", "Inception"]);
+});
+
+test.each([
+  ["cast member", "vijay", "Leo"],
+  ["language", "tamil", "Leo"],
+  ["genre", "action", "Leo"],
+])("searches by %s metadata", async (_label, term, expectedTitle) => {
+  const { result } = renderHook(() => useMovies());
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  act(() => result.current.searchMovies(term));
+  expect(result.current.movies.map((movie) => movie.title)).toEqual([expectedTitle]);
 });
 
 test("shows an error when movie loading fails", async () => {

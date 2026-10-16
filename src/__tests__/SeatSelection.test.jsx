@@ -8,6 +8,8 @@ jest.mock("../hooks/useBooking", () => ({
   default: jest.fn(),
 }));
 jest.mock("../utils/availability", () => ({ getBookedSeats: jest.fn() }));
+jest.mock("../api/apiClient", () => ({ API_ENABLED: false }));
+jest.mock("../api/bookingApi", () => ({ fetchAvailability: jest.fn() }));
 
 const selectSeat = jest.fn();
 const baseBooking = {

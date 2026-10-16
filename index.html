@@ -54,9 +54,10 @@
       if (!redirect) return;
       var base = "/Movie-Booking/";
       var target = decodeURIComponent(redirect);
-      // Only same-app paths are accepted; anything else falls back to home.
-      if (target.charAt(0) !== "/" || target.indexOf("//") === 0)
-        target = "/";
+      // GitHub Pages sends the relative route (e.g. ticket/CB123) here.
+      // Restore its leading slash, while blocking protocol-relative redirects.
+      if (target.charAt(0) !== "/") target = `/${target}`;
+      if (target.indexOf("//") === 0) target = "/";
       var rest = target;
       while (rest.charAt(0) === "/") {
         rest = rest.slice(1);

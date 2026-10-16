@@ -36,7 +36,7 @@ function MovieList({ movies, onSelectMovie, loading, error }) {
   }
 
   return (
-    <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-9 md:grid-cols-2">
       {movies.map((movie) => (
         <MovieCard key={movie.id} movie={movie} onSelect={onSelectMovie} />
       ))}
